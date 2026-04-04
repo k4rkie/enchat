@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Enchat | Room</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="chat-page">
+  <div id="app">
+    <header>
+      <div class="header-content">
+        <h1>Enchat</h1>
+        <div class="status-indicator">
+          <span id="connection-status" class="status offline"></span>
+          <span id="timer-display">00:00</span>
+        </div>
+      </div>
+    </header>
+
+    <main id="chat-window">
+      <div id="messages-container">
+        <div class="system-message">Connected to room. Messages are ephemeral.</div>
+      </div>
+    </main>
+
+    <footer>
+      <form id="chat-form">
+        <input 
+          type="text" 
+          id="msg-input" 
+          placeholder="Type a message..." 
+          autocomplete="off"
+          required
+        >
+        <button type="submit" id="send-btn">Send</button>
+      </form>
+    </footer>
+  </div>
+  <script src="index.js"></script>
+</body>
+</html>
