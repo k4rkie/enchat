@@ -42,6 +42,7 @@ body {
 
 .hero {
   padding: none;
+  border: none;
 }
 
 .hero h1 {
@@ -131,6 +132,93 @@ body {
   color: #333;
 }
 
+/* --- Modal Styles --- */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(5px);
+}
+
+.modal-overlay.hidden {
+  display: none;
+}
+
+.modal-content {
+  background: #0d0d0d;
+  border: 1px solid var(--accent-color);
+  padding: 2rem;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 0 40px rgba(0, 255, 65, 0.1);
+  text-align: left;
+}
+
+.modal-content h2 {
+  font-size: 1.2rem;
+  margin-bottom: 2rem;
+  color: var(--accent-color);
+  letter-spacing: 3px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.5rem;
+}
+
+.modal-body {
+  margin-bottom: 2rem;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  margin-bottom: 1.5rem;
+}
+
+.input-group label {
+  font-size: 0.7rem;
+  color: var(--system-text);
+  letter-spacing: 1px;
+}
+
+#room-name {
+  background: var(--input-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+  padding: 12px;
+  font-family: var(--font-family);
+  outline: none;
+}
+
+#room-name:focus {
+  border-color: var(--accent-color);
+}
+
+.info-box {
+  background: #111;
+  padding: 1rem;
+  border-left: 2px solid var(--system-text);
+  font-size: 0.8rem;
+  color: #666;
+  line-height: 1.6;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.modal-actions button {
+  flex: 1;
+  font-size: 0.8rem;
+}
+
 /* --- Chat Page Styles --- */
 .chat-page #app {
   display: flex;
@@ -148,6 +236,7 @@ header {
   background: var(--bg-color);
   display: flex;
   flex-direction: column;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .header-content {
@@ -234,6 +323,30 @@ footer {
   padding: 1rem;
   border-top: 1px solid var(--border-color);
   background: var(--bg-color);
+}
+
+.footer {
+  margin-top: 2rem;
+  padding: 0.5rem 0;
+  text-align: center;
+  border-top: none;
+}
+
+.footer p {
+  font-size: 0.75rem;
+  letter-spacing: 2px;
+  color: #666;
+  font-weight: 500;
+}
+
+.footer a {
+  color: #888;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.footer a:hover {
+  color: var(--primary-color);
 }
 
 #chat-form {

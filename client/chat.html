@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Enchat | Room</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="/style.css">
 </head>
+
 <body class="chat-page">
   <div id="app">
     <header>
@@ -26,17 +28,13 @@
 
     <footer>
       <form id="chat-form">
-        <input 
-          type="text" 
-          id="msg-input" 
-          placeholder="Type a message..." 
-          autocomplete="off"
-          required
-        >
+        <input type="text" id="msg-input" placeholder="Type a message..." autocomplete="off" required>
         <button type="submit" id="send-btn">Send</button>
       </form>
     </footer>
   </div>
-  <script src="index.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/chat.js"></script>
 </body>
+
 </html>
