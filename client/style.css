@@ -132,7 +132,6 @@ body {
   color: #333;
 }
 
-/* --- Modal Styles --- */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -177,7 +176,7 @@ body {
 .input-group {
   display: flex;
   flex-direction: column;
-  gap: 0.8rem;
+  gap: 0.3rem;
   margin-bottom: 1.5rem;
 }
 
@@ -203,7 +202,6 @@ body {
 .info-box {
   background: #111;
   padding: 1rem;
-  border-left: 2px solid var(--system-text);
   font-size: 0.8rem;
   color: #666;
   line-height: 1.6;
@@ -289,7 +287,8 @@ h1 {
 }
 
 .message {
-  max-width: 80%;
+  align-self: flex-start;
+  max-width: 50%;
   padding: 8px 12px;
   border-radius: 4px;
   background: var(--message-bg);
@@ -380,6 +379,12 @@ footer {
 #send-btn:hover {
   background: var(--accent-color);
   color: var(--bg-color);
+}
+
+.error-text {
+  color: #ff3e3e;
+  font-size: 0.8rem;
+  text-align: left;
 }
 
 /* Custom Scrollbar */

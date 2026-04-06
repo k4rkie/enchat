@@ -8,6 +8,7 @@ const roomNameInput = document.getElementById("room-name");
 //Room join components
 const joinInput = document.getElementById("join-input");
 const joinRoomBtn = document.getElementById("join-room-btn");
+const joinRoomError = document.getElementById("join-room-error");
 
 function generateUserId() {
   if (!localStorage.getItem("userId")) {
@@ -33,7 +34,6 @@ confirmCreateBtn.addEventListener("click", () => {
   const roomName = roomNameInput.value.trim();
 
   if (roomName) {
-    console.log("Creating room:", roomName);
     const roomId = crypto.randomUUID().split("-")[0];
     window.location.href = `/r/${roomId}`;
   } else {
@@ -45,6 +45,11 @@ confirmCreateBtn.addEventListener("click", () => {
 joinRoomBtn.addEventListener("click", () => {
   const roomId = joinInput.value;
   if (roomId) {
+    if (roomId.length !== 8) {
+      joinRoomError.textContent = "Invalid room id";
+      joinRoomError.classList.toggle("hidden");
+      return console.log("Invalid id");
+    }
     window.location.href = `/r/${roomId}`;
     joinInput.value = "";
   } else {

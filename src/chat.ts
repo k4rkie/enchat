@@ -9,7 +9,7 @@ export function initSocket(httpServer: any) {
 
     // room join
     socket.on("join-room", (joinRoomObj) => {
-      handleRoomJoin(joinRoomObj, socket);
+      handleRoomJoin(joinRoomObj, socket, io);
     });
 
     // new message
