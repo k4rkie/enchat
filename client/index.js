@@ -11,11 +11,11 @@ const joinRoomBtn = document.getElementById("join-room-btn");
 const joinRoomError = document.getElementById("join-room-error");
 
 function generateUserId() {
-  if (!localStorage.getItem("userId")) {
-    const userId = localStorage.setItem("userId", `${crypto.randomUUID()}`);
+  if (!sessionStorage.getItem("userId")) {
+    const userId = sessionStorage.setItem("userId", `${crypto.randomUUID()}`);
     return userId;
   }
-  const userId = localStorage.getItem("userId");
+  const userId = sessionStorage.getItem("userId");
   return userId;
 }
 const userId = generateUserId();

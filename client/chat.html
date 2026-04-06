@@ -14,7 +14,7 @@
       <div class="header-content">
         <h1>Enchat</h1>
         <div class="status-indicator">
-          <span id="connection-status" class="status offline"></span>
+          <span id="connection-status" class="status"></span>
           <span id="timer-display">00:00</span>
         </div>
       </div>
@@ -33,6 +33,20 @@
       </form>
     </footer>
   </div>
+
+  <div id="expiry-modal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <h2>Room Expired</h2>
+      <div class="modal-body">
+        <p class="info-box">This room has reached its 30-minute limit and has been deleted. You will be redirected to
+          the home page soon...</p>
+      </div>
+      <div class="modal-actions">
+        <button id="confirm-expiry" class="primary-btn">Return Home</button>
+      </div>
+    </div>
+  </div>
+
   <script src="/socket.io/socket.io.js"></script>
   <script src="/chat.js"></script>
 </body>

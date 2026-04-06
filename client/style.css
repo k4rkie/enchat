@@ -261,15 +261,13 @@ h1 {
   width: 8px;
   height: 8px;
   border-radius: 50%;
+  background-color: #ff3e3e; /* Default: Red */
+  transition: all 0.2s ease-in-out;
 }
 
 .status.online {
-  background-color: var(--accent-color);
-  box-shadow: 0 0 5px var(--accent-color);
-}
-
-.status.offline {
-  background-color: #ff3e3e;
+  background-color: var(--accent-color); /* Green */
+  box-shadow: 0 0 10px var(--accent-color);
 }
 
 #chat-window {
@@ -314,7 +312,6 @@ h1 {
   text-align: center;
   font-size: 0.8rem;
   color: var(--system-text);
-  margin: 10px 0;
   font-style: italic;
 }
 

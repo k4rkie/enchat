@@ -6,7 +6,10 @@ const timerDisplay = document.getElementById("timer-display");
 const connnectionStatus = document.getElementById("connection-status");
 const messagesContainer = document.getElementById("messages-container");
 
-const userId = localStorage.getItem("userId");
+const expiryModal = document.getElementById("expiry-modal");
+const homeBtn = document.getElementById("confirm-expiry");
+
+const userId = sessionStorage.getItem("userId");
 
 //getting roomId form the url
 const roomId = document.URL.split("/")[4];
@@ -39,7 +42,6 @@ socket.on("room-history", (roomHistory) => {
     renderMessages(msg);
   });
 
-  connnectionStatus.classList.remove("offline");
   connnectionStatus.classList.add("online");
 
   const startingTimeInMin = (roomHistory.expiresAt - Date.now()) / (1000 * 60);
@@ -53,20 +55,15 @@ socket.on("room-history", (roomHistory) => {
     time--;
   }
 
-  let blink = true;
   setInterval(() => {
     updateTimer();
-    if (time < 10) {
-      if (blink) {
-        connnectionStatus.classList.toggle("online");
-        connnectionStatus.classList.toggle("offline");
-      }
-      if (time < 0) {
-        window.location.href = "/";
-      }
-    }
-    blink = !blink;
   }, 1000);
+
+  setInterval(() => {
+    if (time < 10) {
+      connnectionStatus.classList.toggle("online");
+    }
+  }, 500);
 });
 
 sendBtn.addEventListener("click", (e) => {
@@ -82,4 +79,14 @@ sendBtn.addEventListener("click", (e) => {
 
 socket.on("newMessage", (msgObj) => {
   renderMessages(msgObj);
+});
+
+socket.on("room-expired", (msg) => {
+  expiryModal.classList.remove("hidden");
+  homeBtn.addEventListener("click", () => {
+    window.location.href = "/";
+  });
+  setTimeout(() => {
+    window.location.href = "/";
+  }, 10000);
 });
