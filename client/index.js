@@ -1,3 +1,7 @@
+// Username
+const userNameInput = document.getElementById("username-input");
+const userNameError = document.getElementById("username-error");
+
 // Room Creation components
 const createRoomBtn = document.getElementById("create-room-btn");
 const roomModal = document.getElementById("room-modal");
@@ -10,19 +14,44 @@ const joinInput = document.getElementById("join-input");
 const joinRoomBtn = document.getElementById("join-room-btn");
 const joinRoomError = document.getElementById("join-room-error");
 
+console.log();
+
 function generateUserId() {
   if (!sessionStorage.getItem("userId")) {
-    const userId = sessionStorage.setItem("userId", `${crypto.randomUUID()}`);
-    return userId;
+    sessionStorage.setItem("userId", `${crypto.randomUUID()}`);
   }
-  const userId = sessionStorage.getItem("userId");
-  return userId;
+  return sessionStorage.getItem("userId");
 }
 const userId = generateUserId();
 
+let userName = sessionStorage.getItem("userName") ?? "";
+function setUserName() {
+  sessionStorage.setItem("userName", userName);
+}
+setUserName();
+
+userNameInput.addEventListener("input", () => {
+  userName = userNameInput.value;
+  if (userName.length < 3 !== true) {
+    userNameError.textContent = "";
+    userNameError.classList.add("hidden");
+  }
+});
+
 createRoomBtn.addEventListener("click", () => {
-  roomModal.classList.remove("hidden");
-  roomNameInput.focus();
+  if (userName) {
+    if (userName.length < 3 || userName.length > 20) {
+      userNameError.textContent = "Username must contain 3-20 characters";
+      userNameError.classList.toggle("hidden");
+      return console.log("Invalid username");
+    }
+    roomModal.classList.remove("hidden");
+    setUserName();
+    roomNameInput.focus();
+  } else {
+    userNameInput.style.borderColor = "#ff3e3e";
+    setTimeout(() => (userNameInput.style.borderColor = ""), 1000);
+  }
 });
 
 cancelModalBtn.addEventListener("click", () => {

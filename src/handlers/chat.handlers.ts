@@ -5,18 +5,21 @@ type newMessageObj = {
   userId: string;
   msg: string;
   roomId: string;
+  userName: string;
 };
 
 type messageObj = {
   userId: string;
   msg: string;
   roomId: string;
+  userName: string;
   msgTimestamp: string;
 };
 
 type joinRoomObj = {
   roomId: string;
   userId: string;
+  userName: string;
 };
 
 type Room = {
@@ -38,7 +41,7 @@ function handleRoomJoin(joinRoomObj: joinRoomObj, socket: Socket, io: Server) {
     roomStore.set(roomKey, {
       roomId: joinRoomObj.roomId,
       messages: [],
-      expiresAt: Date.now() + 0.2 * 60 * 1000,
+      expiresAt: Date.now() + 30 * 60 * 1000,
       users: new Set([joinRoomObj.userId]),
     });
 
@@ -46,10 +49,10 @@ function handleRoomJoin(joinRoomObj: joinRoomObj, socket: Socket, io: Server) {
       () => {
         if (roomStore.has(roomKey)) {
           roomStore.delete(roomKey);
-          io.to(roomKey).emit("room-expired", "The room at expired");
+          io.to(roomKey).emit("room-expired", "The room has expired");
         }
       },
-      0.2 * 60 * 1000,
+      30 * 60 * 1000,
     );
   }
 

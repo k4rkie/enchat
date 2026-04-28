@@ -10,6 +10,10 @@ const expiryModal = document.getElementById("expiry-modal");
 const homeBtn = document.getElementById("confirm-expiry");
 
 const userId = sessionStorage.getItem("userId");
+const userName = sessionStorage.getItem("userName") ?? "";
+
+let timeInterval = null;
+let connectionStatusInterval = null;
 
 //getting roomId form the url
 const roomId = document.URL.split("/")[4];
@@ -22,15 +26,23 @@ function renderMessages(msgObj) {
   if (msgObj.userId === userId) {
     newMessageContainer.classList.add("self");
   }
+  const msgAuthor = document.createElement("span");
+  msgAuthor.classList.add("msg-author");
+  msgAuthor.textContent = msgObj.userName || "ANONYMOUS";
+
+  const msgBubble = document.createElement("div");
+  msgBubble.classList.add("msg-bubble");
 
   const message = document.createElement("p");
   message.textContent = msgObj.msg;
+  msgBubble.appendChild(message);
 
   const msgTimestamp = document.createElement("span");
   msgTimestamp.classList.add("timestamp");
   msgTimestamp.textContent = `${msgObj.msgTimestamp}`;
 
-  newMessageContainer.appendChild(message);
+  newMessageContainer.appendChild(msgAuthor);
+  newMessageContainer.appendChild(msgBubble);
   newMessageContainer.appendChild(msgTimestamp);
 
   messagesContainer.appendChild(newMessageContainer);
@@ -55,11 +67,18 @@ socket.on("room-history", (roomHistory) => {
     time--;
   }
 
-  setInterval(() => {
+  if (timeInterval) {
+    clearInterval(timeInterval);
+  }
+  updateTimer();
+  timeInterval = setInterval(() => {
     updateTimer();
   }, 1000);
 
-  setInterval(() => {
+  if (connectionStatusInterval) {
+    clearInterval(connectionStatusInterval);
+  }
+  connectionStatusInterval = setInterval(() => {
     if (time < 10) {
       connnectionStatus.classList.toggle("online");
     }
@@ -71,7 +90,7 @@ sendBtn.addEventListener("click", (e) => {
 
   if (msgInput.value) {
     const msg = msgInput.value;
-    socket.emit("newMessage", { userId, msg, roomId });
+    socket.emit("newMessage", { userId, msg, roomId, userName });
 
     msgInput.value = "";
   }
