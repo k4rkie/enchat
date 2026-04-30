@@ -2,6 +2,7 @@ import express from "express";
 import path from "node:path";
 import http from "node:http";
 import { initSocket } from "./chat";
+import { checkRoom } from "./handlers/chat.handlers";
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -14,11 +15,14 @@ app.get("/", (req, res) => {
   return res.sendFile(path.join(process.cwd(), "client/index.html"));
 });
 
+app.get("/check-room", checkRoom);
+
 app.get("/r/:roomId", (req, res) => {
   return res.sendFile(path.join(process.cwd(), "client/chat.html"));
 });
 
 app.use(express.static(path.join(process.cwd(), "client")));
+app.use(express.static(path.join(process.cwd(), "public")));
 
 app.get("/health", (req, res) => {
   return res.send("OK");

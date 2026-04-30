@@ -4,8 +4,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Enchat | Welcome</title>
+  <title>Enchat</title>
   <link rel="stylesheet" href="/style.css">
+  <link rel="icon" href="/favicon.png">
 </head>
 
 <body class="welcome-page">
@@ -30,11 +31,7 @@
       <div class="button-group">
         <button id="create-room-btn" class="primary-btn">CREATE NEW ROOM</button>
 
-        <div class="join-section">
-          <input type="text" id="join-input" placeholder="ENTER ROOM ID" maxlength="8" minlength="8">
-          <p id="join-room-error" class="error-text hidden"></p>
-          <button id="join-room-btn" class="secondary-btn">JOIN ROOM</button>
-        </div>
+        <button id="join-room-btn" class="secondary-btn">JOIN ROOM</button>
       </div>
     </main>
 
@@ -44,8 +41,8 @@
 
   </div>
 
-  <!-- Room Configuration Modal -->
-  <div id="room-modal" class="modal-overlay hidden">
+  <!-- Create Room Configuration Modal -->
+  <div id="create-room-modal" class="modal-overlay hidden">
     <div class="modal-content">
       <h2>INITIALIZE_ROOM</h2>
 
@@ -63,7 +60,27 @@
 
       <div class="modal-actions">
         <button id="confirm-create" class="primary-btn">CREATE</button>
-        <button id="cancel-modal" class="secondary-btn">CANCEL</button>
+        <button id="cancel-create-modal" class="secondary-btn">CANCEL</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Join room confirmation modal -->
+  <div id="join-room-modal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <h2>JOIN_ROOM</h2>
+
+      <div class="modal-body">
+        <div class="input-group">
+          <label for="join-input">ROOM ID:</label>
+          <input type="text" id="join-input" placeholder="ENTER ROOM ID" maxlength="8" minlength="8">
+          <p id="join-room-error" class="error-text hidden"></p>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button id="confirm-join" class="primary-btn">JOIN</button>
+        <button id="cancel-join-modal" class="secondary-btn">CANCEL</button>
       </div>
     </div>
   </div>

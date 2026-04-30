@@ -5,6 +5,7 @@ const sendBtn = document.getElementById("send-btn");
 const timerDisplay = document.getElementById("timer-display");
 const connnectionStatus = document.getElementById("connection-status");
 const messagesContainer = document.getElementById("messages-container");
+const chatWindow = document.getElementById("chat-window");
 
 const expiryModal = document.getElementById("expiry-modal");
 const homeBtn = document.getElementById("confirm-expiry");
@@ -19,6 +20,7 @@ let connectionStatusInterval = null;
 const roomId = document.URL.split("/")[4];
 socket.emit("join-room", { roomId, userId });
 
+// rendering messages
 function renderMessages(msgObj) {
   const newMessageContainer = document.createElement("div");
   newMessageContainer.classList.add("message");
@@ -46,13 +48,20 @@ function renderMessages(msgObj) {
   newMessageContainer.appendChild(msgTimestamp);
 
   messagesContainer.appendChild(newMessageContainer);
+  scrollToBottom();
 }
 
+function scrollToBottom() {
+  chatWindow.scrollTop = chatWindow.scrollHeight;
+}
+
+// responding to room-history event
 socket.on("room-history", (roomHistory) => {
   messagesContainer.innerHTML = "";
   roomHistory.messages.forEach((msg) => {
     renderMessages(msg);
   });
+  scrollToBottom();
 
   connnectionStatus.classList.add("online");
 
@@ -85,6 +94,7 @@ socket.on("room-history", (roomHistory) => {
   }, 500);
 });
 
+// Send message event listener
 sendBtn.addEventListener("click", (e) => {
   e.preventDefault();
 

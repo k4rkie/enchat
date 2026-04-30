@@ -2,7 +2,7 @@
 
 A minimalist, high-security, ephemeral chat application built with Bun and WebSockets.
 
-![enchat-preview](./preview/enchat.png "a title")
+![enchat-preview](./public/preview/preview.webp "Enchat preview")
 
 ## The Concept
 

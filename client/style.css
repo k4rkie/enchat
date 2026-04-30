@@ -6,7 +6,7 @@
   --input-bg: #111;
   --message-bg: #161616;
   --system-text: #666;
-  --font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+  --font-family: 'FiraCode Nerd Font', 'Courier New', monospace;
 }
 
 * {
@@ -23,6 +23,8 @@ body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-color) var(--bg-color);
 }
 
 /* --- Welcome Page Styles --- */
@@ -109,7 +111,6 @@ body {
   margin-bottom: 1rem;
 }
 
-.join-section,
 .username-section {
   display: flex;
   flex-direction: column;
@@ -324,7 +325,8 @@ h1 {
 }
 
 .message.self .msg-author {
-  display: none; /* Hide your own name for a cleaner look */
+  display: none;
+  /* Hide your own name for a cleaner look */
 }
 
 .msg-bubble {
@@ -386,9 +388,11 @@ footer {
   color: #888;
   text-decoration: none;
   transition: color 0.2s;
+  transition: text-decoration 0.2s;
 }
 
 .footer a:hover {
+  text-decoration: underline;
   color: var(--primary-color);
 }
 
@@ -446,4 +450,8 @@ footer {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--system-text);
+}
+
+.hidden {
+  display: none;
 }

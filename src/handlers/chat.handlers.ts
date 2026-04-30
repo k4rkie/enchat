@@ -1,3 +1,4 @@
+import type { Request, Response } from "express";
 import type { Server, Socket } from "socket.io";
 import { getCurrentTime } from "../utils/utils";
 
@@ -31,6 +32,24 @@ type Room = {
 
 const roomStore = new Map<string, Room>();
 
+function checkRoom(req: Request, res: Response) {
+  const roomId = req.query.roomId;
+  const roomKey = `r-${roomId}`;
+  if (!roomId) {
+    return res.status(400).json({
+      error: "Room Id is required",
+    });
+  }
+  if (!roomStore.has(roomKey)) {
+    return res.status(404).json({
+      error: "Room with provided id doesn't exist",
+    });
+  }
+  return res.status(200).json({
+    message: "Room check successful",
+  });
+}
+
 //do stuff after a user joins/creates a new room
 function handleRoomJoin(joinRoomObj: joinRoomObj, socket: Socket, io: Server) {
   const roomKey = `r-${joinRoomObj.roomId}`;
@@ -58,6 +77,7 @@ function handleRoomJoin(joinRoomObj: joinRoomObj, socket: Socket, io: Server) {
 
   const room = roomStore.get(roomKey);
   if (room) {
+    console.log(roomStore);
     room!.users.add(joinRoomObj.userId);
   }
 
@@ -83,4 +103,4 @@ function handleNewMessage(newMessage: newMessageObj, io: Server) {
   io.to(roomKey).emit("newMessage", message);
 }
 
-export { handleNewMessage, handleRoomJoin };
+export { checkRoom, handleNewMessage, handleRoomJoin };
