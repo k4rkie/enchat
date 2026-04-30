@@ -75,6 +75,7 @@ body {
 }
 
 .primary-btn,
+.okay-button,
 .secondary-btn {
   font-family: var(--font-family);
   padding: 12px;
@@ -84,7 +85,8 @@ body {
   letter-spacing: 1px;
 }
 
-.primary-btn {
+.primary-btn,
+.okay-button {
   background: var(--accent-color);
   color: var(--bg-color);
   border: none;
@@ -247,17 +249,98 @@ body {
 }
 
 header {
-  padding: 1rem;
+  padding: 0.75rem 1rem;
   background: var(--bg-color);
   display: flex;
   flex-direction: column;
+  gap: 0.75rem;
   border-bottom: 1px solid var(--border-color);
 }
 
-.header-content {
+.header-top,
+.header-bottom {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.header-bottom {
+  padding-top: 0.5rem;
+  border-top: 1px dashed #222;
+}
+
+.room-meta {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.label {
+  font-size: 0.65rem;
+  color: var(--system-text);
+  letter-spacing: 1px;
+}
+
+.value {
+  font-size: 0.75rem;
+  color: var(--text-color);
+  font-weight: bold;
+}
+
+#room-id-display {
+  color: var(--accent-color);
+  background: #111;
+  padding: 2px 6px;
+  border-radius: 2px;
+}
+
+.icon-btn {
+  background: transparent;
+  border: none;
+  color: var(--system-text);
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0 4px;
+  transition: color 0.2s;
+}
+
+.icon-btn:hover {
+  color: var(--accent-color);
+}
+
+.nuke-btn {
+  background: transparent;
+  border: 1px solid #ff3e3e;
+  color: #ff3e3e;
+  font-family: var(--font-family);
+  font-size: 0.7rem;
+  padding: 4px 10px;
+  cursor: pointer;
+  letter-spacing: 1px;
+  transition: all 0.2s;
+}
+
+.nuke-btn:hover {
+  background: #ff3e3e;
+  color: #fff;
+  box-shadow: 0 0 10px rgba(255, 62, 62, 0.3);
+}
+
+.room-stats {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 h1 {

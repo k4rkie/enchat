@@ -20,11 +20,12 @@ type messageObj = {
 type joinRoomObj = {
   roomId: string;
   userId: string;
-  userName: string;
+  roomName: string;
 };
 
 type Room = {
   roomId: string;
+  roomName: string;
   messages: messageObj[];
   expiresAt: number;
   users: Set<string>;
@@ -59,6 +60,7 @@ function handleRoomJoin(joinRoomObj: joinRoomObj, socket: Socket, io: Server) {
   if (!roomStore.has(roomKey)) {
     roomStore.set(roomKey, {
       roomId: joinRoomObj.roomId,
+      roomName: joinRoomObj.roomName,
       messages: [],
       expiresAt: Date.now() + 30 * 60 * 1000,
       users: new Set([joinRoomObj.userId]),
@@ -74,19 +76,18 @@ function handleRoomJoin(joinRoomObj: joinRoomObj, socket: Socket, io: Server) {
       30 * 60 * 1000,
     );
   }
-
-  const room = roomStore.get(roomKey);
-  if (room) {
-    console.log(roomStore);
-    room!.users.add(joinRoomObj.userId);
-  }
+  const room = roomStore.get(roomKey)!;
+  room.users.add(joinRoomObj.userId);
 
   const roomHistory = {
-    messages: room?.messages,
-    expiresAt: room?.expiresAt,
+    roomId: room.roomId,
+    roomName: room.roomName,
+    messages: room.messages,
+    expiresAt: room.expiresAt,
+    noOfUsers: room.users.size,
   };
 
-  socket.emit("room-history", roomHistory);
+  io.to(roomKey).emit("room-history", roomHistory);
 }
 
 //do stuff after a new message is sent

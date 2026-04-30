@@ -12,11 +12,34 @@
 <body class="chat-page">
   <div id="app">
     <header>
-      <div class="header-content">
-        <h1>Enchat</h1>
-        <div class="status-indicator">
-          <span id="connection-status" class="status"></span>
-          <span id="timer-display">00:00</span>
+      <div class="header-top">
+        <div class="brand">
+          <h1>Enchat</h1>
+          <div class="status-indicator">
+            <span id="connection-status" class="status"></span>
+            <span id="timer-display">--:--</span>
+          </div>
+        </div>
+        <div class="header-actions">
+          <button id="terminate-room-btn" class="nuke-btn">TERMINATE_SESSION</button>
+        </div>
+      </div>
+
+      <div class="header-bottom">
+        <div class="room-meta">
+          <div class="meta-item">
+            <span class="label">ROOM:</span>
+            <span id="room-name-display" class="value">INITIALIZING...</span>
+          </div>
+          <div class="meta-item">
+            <span class="label">ID:</span>
+            <code id="room-id-display" class="value">--------</code>
+            <button id="copy-id-btn" class="icon-btn" title="Copy Room ID">⎘ </button>
+          </div>
+        </div>
+        <div class="room-stats">
+          <span id="user-count" class="value">1</span>
+          <span class="label">USERS_ACTIVE</span>
         </div>
       </div>
     </header>
@@ -47,6 +70,8 @@
       </div>
     </div>
   </div>
+
+
 
   <script src="/socket.io/socket.io.js"></script>
   <script src="/chat.js"></script>

@@ -17,6 +17,19 @@ const cancelJoinModalBtn = document.getElementById("cancel-join-modal");
 const joinInput = document.getElementById("join-input");
 const joinRoomError = document.getElementById("join-room-error");
 
+// No username
+const noUserNameModal = document.getElementById("no-username-redirect-modal");
+const okayButton = document.querySelector(".okay-button");
+
+const url = new URL(window.location.href);
+const noUsernameRedirect = url.searchParams.get("noUsernameRedirect");
+if (noUsernameRedirect) {
+  noUserNameModal.classList.toggle("hidden");
+  okayButton.addEventListener("click", () => {
+    window.location.href = "/";
+  });
+}
+
 function generateUserId() {
   if (!sessionStorage.getItem("userId")) {
     sessionStorage.setItem("userId", `${crypto.randomUUID()}`);
@@ -60,6 +73,7 @@ confirmCreateBtn.addEventListener("click", () => {
   const roomName = roomNameInput.value.trim();
   if (roomName) {
     const roomId = crypto.randomUUID().split("-")[0];
+    sessionStorage.setItem("roomName", roomName);
     window.location.href = `/r/${roomId}`;
   } else {
     roomNameInput.style.borderColor = "#ff3e3e";

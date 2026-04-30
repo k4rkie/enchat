@@ -13,12 +13,25 @@ const homeBtn = document.getElementById("confirm-expiry");
 const userId = sessionStorage.getItem("userId");
 const userName = sessionStorage.getItem("userName") ?? "";
 
+const roomName = sessionStorage.getItem("roomName") ?? "";
+
+const roomNameDisplay = document.getElementById("room-name-display");
+const roomIdDisplay = document.getElementById("room-id-display");
+const copyIdBtn = document.getElementById("copy-id-btn");
+const userCountDisplay = document.getElementById("user-count");
+
+if (userName.length === 0) {
+  window.location.href = "/?noUsernameRedirect=true";
+}
+
+// chat duration counter
 let timeInterval = null;
 let connectionStatusInterval = null;
 
 //getting roomId form the url
 const roomId = document.URL.split("/")[4];
-socket.emit("join-room", { roomId, userId });
+socket.emit("join-room", { roomId, userId, roomName });
+sessionStorage.removeItem("roomName");
 
 // rendering messages
 function renderMessages(msgObj) {
@@ -55,8 +68,16 @@ function scrollToBottom() {
   chatWindow.scrollTop = chatWindow.scrollHeight;
 }
 
+copyIdBtn.addEventListener("click", () => {
+  navigator.clipboard.writeText(roomId);
+});
+
 // responding to room-history event
 socket.on("room-history", (roomHistory) => {
+  roomNameDisplay.textContent = roomHistory.roomName;
+  roomIdDisplay.textContent = roomHistory.roomId;
+  userCountDisplay.textContent = roomHistory.noOfUsers;
+
   messagesContainer.innerHTML = "";
   roomHistory.messages.forEach((msg) => {
     renderMessages(msg);
