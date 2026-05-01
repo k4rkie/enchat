@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import type { Server, Socket } from "socket.io";
 import { getCurrentTime } from "../utils/utils";
+import { join } from "node:path/posix";
 
 type newMessageObj = {
   userId: string;
@@ -15,12 +16,14 @@ type messageObj = {
   roomId: string;
   userName: string;
   msgTimestamp: string;
+  type: "text" | "system_msg";
 };
 
 type joinRoomObj = {
   roomId: string;
   userId: string;
   roomName: string;
+  userName: string;
 };
 
 type Room = {
@@ -29,6 +32,7 @@ type Room = {
   messages: messageObj[];
   expiresAt: number;
   users: Set<string>;
+  adminId: string;
 };
 
 const roomStore = new Map<string, Room>();
@@ -64,6 +68,7 @@ function handleRoomJoin(joinRoomObj: joinRoomObj, socket: Socket, io: Server) {
       messages: [],
       expiresAt: Date.now() + 30 * 60 * 1000,
       users: new Set([joinRoomObj.userId]),
+      adminId: joinRoomObj.userId,
     });
 
     setTimeout(
@@ -75,16 +80,26 @@ function handleRoomJoin(joinRoomObj: joinRoomObj, socket: Socket, io: Server) {
       },
       30 * 60 * 1000,
     );
+  } else {
+    roomStore.get(roomKey)!.users.add(joinRoomObj.userId);
+    roomStore.get(roomKey)?.messages.push({
+      roomId: joinRoomObj.roomId,
+      userId: joinRoomObj.userId,
+      msg: `${joinRoomObj.userName} joined the room`,
+      userName: joinRoomObj.userName,
+      msgTimestamp: getCurrentTime(),
+      type: "system_msg",
+    });
   }
-  const room = roomStore.get(roomKey)!;
-  room.users.add(joinRoomObj.userId);
 
+  const room = roomStore.get(roomKey)!;
   const roomHistory = {
     roomId: room.roomId,
     roomName: room.roomName,
     messages: room.messages,
     expiresAt: room.expiresAt,
     noOfUsers: room.users.size,
+    adminId: room.adminId,
   };
 
   io.to(roomKey).emit("room-history", roomHistory);
@@ -97,11 +112,29 @@ function handleNewMessage(newMessage: newMessageObj, io: Server) {
   const room = roomStore.get(roomKey);
 
   const msgTimestamp = getCurrentTime();
-  const message = { ...newMessage, msgTimestamp };
+  const message: messageObj = {
+    ...newMessage,
+    msgTimestamp,
+    type: "text",
+  };
 
   room?.messages.push(message);
 
   io.to(roomKey).emit("newMessage", message);
 }
 
-export { checkRoom, handleNewMessage, handleRoomJoin };
+function handleTerminateRoom(terminateRoomObj: any, io: Server) {
+  const roomKey = `r-${terminateRoomObj.roomId}`;
+  if (roomStore.has(roomKey)) {
+    roomStore.delete(roomKey);
+    console.log(
+      `Room with id: ${terminateRoomObj.roomId} has been removed form the room store`,
+    );
+  }
+  io.to(roomKey).emit(
+    "terminate-room-successful",
+    "Room Terminated Successfully",
+  );
+}
+
+export { checkRoom, handleNewMessage, handleRoomJoin, handleTerminateRoom };

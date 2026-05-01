@@ -19,16 +19,36 @@ const joinRoomError = document.getElementById("join-room-error");
 
 // No username
 const noUserNameModal = document.getElementById("no-username-redirect-modal");
-const okayButton = document.querySelector(".okay-button");
+const noUserNameConfirmBtn = document.getElementById("no-username-confirm-btn");
+
+// Room terminated
+const roomTerminatedRedirectModal = document.getElementById(
+  "room-terminated-redirect-modal",
+);
+const roomTerminatedConfirmBtn = document.getElementById(
+  "room-terminated-confirm-btn",
+);
 
 const url = new URL(window.location.href);
-const noUsernameRedirect = url.searchParams.get("noUsernameRedirect");
+const noUsernameRedirect =
+  url.searchParams.get("noUsernameRedirect") === null ? false : true;
 if (noUsernameRedirect) {
   noUserNameModal.classList.toggle("hidden");
-  okayButton.addEventListener("click", () => {
+  noUserNameConfirmBtn.addEventListener("click", () => {
     window.location.href = "/";
   });
 }
+const roomTerminationRedirect =
+  url.searchParams.get("roomTerminated") === null ? false : true;
+if (roomTerminationRedirect) {
+  roomTerminatedRedirectModal.classList.toggle("hidden");
+  roomTerminatedConfirmBtn.addEventListener("click", () => {
+    window.location.href = "/";
+  });
+}
+
+console.log("noUsernameRedirect:", noUsernameRedirect);
+console.log("roomTerminationRedirect:", roomTerminationRedirect);
 
 function generateUserId() {
   if (!sessionStorage.getItem("userId")) {

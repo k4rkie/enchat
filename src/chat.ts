@@ -1,5 +1,9 @@
 import { Server } from "socket.io";
-import { handleNewMessage, handleRoomJoin } from "./handlers/chat.handlers";
+import {
+  handleNewMessage,
+  handleRoomJoin,
+  handleTerminateRoom,
+} from "./handlers/chat.handlers";
 
 export function initSocket(httpServer: any) {
   const io = new Server(httpServer);
@@ -15,6 +19,11 @@ export function initSocket(httpServer: any) {
     // new message
     socket.on("newMessage", (newMessage) => {
       handleNewMessage(newMessage, io);
+    });
+
+    //terminate room
+    socket.on("terminate-room", (terminateRoomObj) => {
+      handleTerminateRoom(terminateRoomObj, io);
     });
   });
 

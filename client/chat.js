@@ -20,6 +20,19 @@ const roomIdDisplay = document.getElementById("room-id-display");
 const copyIdBtn = document.getElementById("copy-id-btn");
 const userCountDisplay = document.getElementById("user-count");
 
+const terminateRoomBtn = document.getElementById("terminate-room-btn");
+const confirmRoomTerminationModal = document.getElementById(
+  "confirm-room-termination-modal",
+);
+const confirmTerminateButton = document.getElementById(
+  "confirm-terminate-button",
+);
+const cancelTerminateButton = document.getElementById(
+  "cancel-terminate-button",
+);
+
+let isUserAdmin = "false";
+
 if (userName.length === 0) {
   window.location.href = "/?noUsernameRedirect=true";
 }
@@ -30,7 +43,7 @@ let connectionStatusInterval = null;
 
 //getting roomId form the url
 const roomId = document.URL.split("/")[4];
-socket.emit("join-room", { roomId, userId, roomName });
+socket.emit("join-room", { roomId, userId, roomName, userName });
 sessionStorage.removeItem("roomName");
 
 // rendering messages
@@ -72,11 +85,30 @@ copyIdBtn.addEventListener("click", () => {
   navigator.clipboard.writeText(roomId);
 });
 
+terminateRoomBtn.addEventListener("click", () => {
+  confirmRoomTerminationModal.classList.toggle("hidden");
+});
+
+confirmTerminateButton.addEventListener("click", () => {
+  console.log("Terminate room event emitted");
+  socket.emit("terminate-room", { roomId });
+});
+
+cancelTerminateButton.addEventListener("click", () => {
+  confirmRoomTerminationModal.classList.toggle("hidden");
+});
+
 // responding to room-history event
 socket.on("room-history", (roomHistory) => {
   roomNameDisplay.textContent = roomHistory.roomName;
   roomIdDisplay.textContent = roomHistory.roomId;
   userCountDisplay.textContent = roomHistory.noOfUsers;
+
+  isUserAdmin = roomHistory.adminId === userId ? true : false;
+
+  if (isUserAdmin) {
+    terminateRoomBtn.classList.remove("hidden");
+  }
 
   messagesContainer.innerHTML = "";
   roomHistory.messages.forEach((msg) => {
@@ -139,4 +171,12 @@ socket.on("room-expired", (msg) => {
   setTimeout(() => {
     window.location.href = "/";
   }, 10000);
+});
+
+socket.on("terminate-room-successful", (msg) => {
+  if (!isUserAdmin) {
+    window.location.href = `/?roomTerminated=true`;
+    return;
+  }
+  window.location.href = "/";
 });

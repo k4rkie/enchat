@@ -21,7 +21,7 @@
           </div>
         </div>
         <div class="header-actions">
-          <button id="terminate-room-btn" class="nuke-btn">TERMINATE_SESSION</button>
+          <button id="terminate-room-btn" class="nuke-btn hidden">TERMINATE_SESSION</button>
         </div>
       </div>
 
@@ -72,6 +72,21 @@
   </div>
 
 
+  <div id="confirm-room-termination-modal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <h2>Confirm Termination</h2>
+      <div class="modal-body">
+        <p class="info-box">
+          Are you sure you want to terminate this room?
+          Termination will result in all the users being kicked out!
+        </p>
+      </div>
+      <div class="modal-actions">
+        <button id="confirm-terminate-button" class="primary-btn">Terimnate</button>
+        <button id="cancel-terminate-button" class="secondary-btn">Cancel</button>
+      </div>
+    </div>
+  </div>
 
   <script src="/socket.io/socket.io.js"></script>
   <script src="/chat.js"></script>

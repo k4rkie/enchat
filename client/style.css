@@ -17,6 +17,7 @@
 
 body {
   background-color: var(--bg-color);
+  position: relative;
   color: var(--text-color);
   font-family: var(--font-family);
   height: 100vh;
@@ -38,7 +39,7 @@ body {
   width: 90%;
   text-align: center;
   border: 1px solid var(--border-color);
-  padding: 2rem 2rem 1.5rem 2rem;
+  padding: 2rem;
   background: #0d0d0d;
 }
 
@@ -99,14 +100,14 @@ body {
   box-shadow: 0 0 15px rgba(0, 255, 65, 0.3);
 }
 
-#username-input {
-  background: var(--input-bg);
-  border: 1px solid var(--border-color);
-  color: var(--text-color);
-  padding: 12px;
-  font-family: var(--font-family);
-  text-align: center;
-  outline: none;
+
+#confirm-terminate-button {
+  background: #ff3e3e;
+}
+
+#confirm-terminate-button:hover {
+  background: #ff3e3e;
+  box-shadow: 0 0 15px rgba(255, 62, 62, 0.3);
 }
 
 .username-section {
@@ -121,6 +122,7 @@ body {
 
 #join-input,
 #username-input {
+  margin-bottom: 0.8rem;
   background: var(--input-bg);
   border: 1px solid var(--border-color);
   color: var(--text-color);
@@ -130,7 +132,8 @@ body {
   outline: none;
 }
 
-#join-input:focus {
+#join-input:focus,
+#username-input:focus {
   border-color: var(--system-text);
 }
 
@@ -447,6 +450,7 @@ h1 {
   font-size: 0.8rem;
   color: var(--system-text);
   font-style: italic;
+  margin-bottom: 1rem;
 }
 
 footer {
@@ -516,6 +520,22 @@ footer {
   color: #ff3e3e;
   font-size: 0.8rem;
   text-align: left;
+}
+
+#github-link {
+  position: absolute;
+  opacity: 30%;
+  top: 2rem;
+  right: 2rem;
+  border: 1px solid #222;
+  padding: 6px;
+  transition: border 0.3s;
+  transition: opacity 0.3s;
+}
+
+#github-link:hover {
+  opacity: 80%;
+  border: 1px solid #999;
 }
 
 /* Custom Scrollbar */

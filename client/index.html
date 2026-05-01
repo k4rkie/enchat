@@ -35,10 +35,6 @@
       </div>
     </main>
 
-    <footer class="footer">
-      <p>By <a href="https://github.com/k4rkie" target="_blank" rel="noopener">🐙k4rkie</a></p>
-    </footer>
-
   </div>
 
   <!-- Create Room Configuration Modal -->
@@ -88,18 +84,34 @@
 
   <div id="no-username-redirect-modal" class="modal-overlay hidden">
     <div class="modal-content">
-      <h2>Username Required</h2>
+      <h2>USERNAME REQUIRED</h2>
       <div class="modal-body">
         <p class="info-box">
           You cannot join a room without providing a username. Enter you username and try joining the room again.
         </p>
       </div>
       <div class="modal-actions">
-        <button class="okay-button" class="primary-btn">Got IT</button>
+        <button id="no-username-confirm-btn" class="primary-btn">Got IT</button>
       </div>
     </div>
   </div>
 
+
+  <div id="room-terminated-redirect-modal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <h2>ROOM TERMINATED</h2>
+      <div class="modal-body">
+        <p class="info-box">
+          The room you were currently in was terminated by the admin. All users have been redirected.
+        </p>
+      </div>
+      <div class="modal-actions">
+        <button id="room-terminated-confirm-btn" class="primary-btn">Got it</button>
+      </div>
+    </div>
+  </div>
+
+  <a href="https://github.com/k4rkie" target="_blank" rel="noopener" title="k4rkie-github" id="github-link">🐙</a>
   <script src="/index.js"></script>
 </body>
 
