@@ -81,15 +81,18 @@ function handleRoomJoin(joinRoomObj: joinRoomObj, socket: Socket, io: Server) {
       30 * 60 * 1000,
     );
   } else {
-    roomStore.get(roomKey)!.users.add(joinRoomObj.userId);
-    roomStore.get(roomKey)?.messages.push({
-      roomId: joinRoomObj.roomId,
-      userId: joinRoomObj.userId,
-      msg: `${joinRoomObj.userName} joined the room`,
-      userName: joinRoomObj.userName,
-      msgTimestamp: getCurrentTime(),
-      type: "system_msg",
-    });
+    const room = roomStore.get(roomKey)!;
+    if (!room.users.has(joinRoomObj.userId)) {
+      room.users.add(joinRoomObj.userId);
+      room.messages.push({
+        roomId: joinRoomObj.roomId,
+        userId: joinRoomObj.userId,
+        msg: `${joinRoomObj.userName} joined the room`,
+        userName: joinRoomObj.userName,
+        msgTimestamp: getCurrentTime(),
+        type: "system_msg",
+      });
+    }
   }
 
   const room = roomStore.get(roomKey)!;
@@ -107,18 +110,23 @@ function handleRoomJoin(joinRoomObj: joinRoomObj, socket: Socket, io: Server) {
 
 //do stuff after a new message is sent
 function handleNewMessage(newMessage: newMessageObj, io: Server) {
-  const { userId, msg, roomId } = newMessage;
+  const { userId, msg, roomId, userName } = newMessage;
   const roomKey = `r-${roomId}`;
   const room = roomStore.get(roomKey);
 
+  if (!room) return;
+
   const msgTimestamp = getCurrentTime();
   const message: messageObj = {
-    ...newMessage,
+    userId,
+    msg,
+    roomId,
+    userName,
     msgTimestamp,
     type: "text",
   };
 
-  room?.messages.push(message);
+  room.messages.push(message);
 
   io.to(roomKey).emit("newMessage", message);
 }
