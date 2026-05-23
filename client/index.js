@@ -132,7 +132,7 @@ confirmJoinBtn.addEventListener("click", async () => {
     }
     try {
       const response = await fetch(
-        `http://localhost:6969/check-room?roomId=${roomId}`,
+        `/check-room?roomId=${roomId}`,
         {
           method: "GET",
         },
