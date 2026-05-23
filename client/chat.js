@@ -48,6 +48,15 @@ sessionStorage.removeItem("roomName");
 
 // rendering messages
 function renderMessages(msgObj) {
+  if (msgObj.type === "sysmsg") {
+    const sysMsg = document.createElement("div");
+    sysMsg.classList.add("system-message");
+    sysMsg.textContent = msgObj.msg;
+    messagesContainer.appendChild(sysMsg);
+    scrollToBottom();
+    return;
+  }
+
   const newMessageContainer = document.createElement("div");
   newMessageContainer.classList.add("message");
 

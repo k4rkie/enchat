@@ -16,7 +16,7 @@ type messageObj = {
   roomId: string;
   userName: string;
   msgTimestamp: string;
-  type: "text" | "system_msg";
+  type: "text" | "sysmsg";
 };
 
 type joinRoomObj = {
@@ -65,7 +65,16 @@ function handleRoomJoin(joinRoomObj: joinRoomObj, socket: Socket, io: Server) {
     roomStore.set(roomKey, {
       roomId: joinRoomObj.roomId,
       roomName: joinRoomObj.roomName,
-      messages: [],
+      messages: [
+        {
+          roomId: joinRoomObj.roomId,
+          userId: joinRoomObj.userId,
+          msg: `${joinRoomObj.userName} created the room`,
+          userName: joinRoomObj.userName,
+          msgTimestamp: getCurrentTime(),
+          type: "sysmsg",
+        },
+      ],
       expiresAt: Date.now() + 30 * 60 * 1000,
       users: new Set([joinRoomObj.userId]),
       adminId: joinRoomObj.userId,
@@ -90,7 +99,7 @@ function handleRoomJoin(joinRoomObj: joinRoomObj, socket: Socket, io: Server) {
         msg: `${joinRoomObj.userName} joined the room`,
         userName: joinRoomObj.userName,
         msgTimestamp: getCurrentTime(),
-        type: "system_msg",
+        type: "sysmsg",
       });
     }
   }
