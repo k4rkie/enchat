@@ -123,7 +123,7 @@ socket.on("room-history", (roomHistory) => {
   roomHistory.messages.forEach((msg) => {
     renderMessages(msg);
   });
-  
+
   // Use a slight timeout to ensure images or layout adjustments don't interfere
   setTimeout(scrollToBottom, 50);
 

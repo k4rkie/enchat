@@ -1,8 +1,11 @@
-# Enchat
-
-A minimalist, high-security, ephemeral chat application built with Bun and WebSockets.
-
-![enchat-preview](./public/preview/preview.webp "Enchat preview")
+<div align="center">
+  <div style="display: flex; align-items: center; justify-content: center; gap: 12px;">
+    <img src="./public/enchat.jpg" alt="Enchat" width="50" style="margin: 0; display: block;" />
+    <h1 style="margin: 0; line-height: 1; display: flex; align-items: center; border-bottom: none">Enchat</h1>
+  </div>
+  <p>A minimalist, high-security, ephemeral chat application.</p>
+  <img src="./public/preview/preview.webp" width="500" alt="enchat preview" />
+</div>
 
 ## The Concept
 

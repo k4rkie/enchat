@@ -131,12 +131,9 @@ confirmJoinBtn.addEventListener("click", async () => {
       return console.log("Invalid id");
     }
     try {
-      const response = await fetch(
-        `/check-room?roomId=${roomId}`,
-        {
-          method: "GET",
-        },
-      );
+      const response = await fetch(`/check-room?roomId=${roomId}`, {
+        method: "GET",
+      });
       confirmJoinBtn;
       confirmJoinBtn.disabled = true;
       if (!response.ok) {
