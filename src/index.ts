@@ -9,7 +9,7 @@ const httpServer = http.createServer(app);
 
 initSocket(httpServer);
 
-const PORT = process.env.PORT || 6969;
+const PORT = process.env.PORT || 8080;
 
 app.get("/", (req, res) => {
   return res.sendFile(path.join(process.cwd(), "client/index.html"));
