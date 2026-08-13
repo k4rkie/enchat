@@ -3,7 +3,7 @@ import {
   handleNewMessage,
   handleRoomJoin,
   handleTerminateRoom,
-} from "./handlers/chat.handlers";
+} from "@/handlers/chat.handlers";
 
 export function initSocket(httpServer: any) {
   const io = new Server(httpServer);

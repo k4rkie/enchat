@@ -1,8 +1,8 @@
 import express from "express";
 import path from "node:path";
 import http from "node:http";
-import { initSocket } from "./chat";
-import { checkRoom } from "./handlers/chat.handlers";
+import { initSocket } from "@/chat";
+import { checkRoom } from "@/handlers/chat.handlers";
 
 const app = express();
 const httpServer = http.createServer(app);

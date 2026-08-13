@@ -1,7 +1,6 @@
 import type { Request, Response } from "express";
 import type { Server, Socket } from "socket.io";
-import { getCurrentTime } from "../utils/utils";
-import { join } from "node:path/posix";
+import { getCurrentTime } from "@/utils/utils";
 
 type newMessageObj = {
   userId: string;
