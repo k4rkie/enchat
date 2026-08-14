@@ -1,3 +1,12 @@
+import {
+  generateKeyPairs,
+  extractPublicKey,
+  importPublicKey,
+  deriveEncryptionKey,
+  encryptMessage,
+  encodeArrayBufferToBase64,
+} from "./utils/crypto/crypto_utils.js";
+
 const socket = io();
 
 const msgInput = document.getElementById("msg-input");
@@ -43,15 +52,26 @@ let connectionStatusInterval = null;
 
 //getting roomId form the url
 const roomId = document.URL.split("/")[4];
-socket.emit("join-room", { roomId, userId, roomName, userName });
+
+const ecdhKeyPairs = await generateKeyPairs();
+const localPublicKey = await extractPublicKey(ecdhKeyPairs.publicKey);
+let sharedEncryptionKey = null;
+
+socket.emit("join-room", {
+  roomId,
+  userId,
+  roomName,
+  userName,
+  publicKey: localPublicKey,
+});
 sessionStorage.removeItem("roomName");
 
 // rendering messages
-function renderMessages(msgObj) {
+async function renderMessages(msgObj) {
   if (msgObj.type === "sysmsg") {
     const sysMsg = document.createElement("div");
     sysMsg.classList.add("system-message");
-    sysMsg.textContent = msgObj.msg;
+    sysMsg.textContent = msgObj.sysMsg;
     messagesContainer.appendChild(sysMsg);
     scrollToBottom();
     return;
@@ -71,7 +91,8 @@ function renderMessages(msgObj) {
   msgBubble.classList.add("msg-bubble");
 
   const message = document.createElement("p");
-  message.textContent = msgObj.msg;
+
+  message.textContent = msgObj.msgPayload.msgText;
   msgBubble.appendChild(message);
 
   const msgTimestamp = document.createElement("span");
@@ -99,7 +120,6 @@ terminateRoomBtn.addEventListener("click", () => {
 });
 
 confirmTerminateButton.addEventListener("click", () => {
-  console.log("Terminate room event emitted");
   socket.emit("terminate-room", { roomId });
 });
 
@@ -108,7 +128,7 @@ cancelTerminateButton.addEventListener("click", () => {
 });
 
 // responding to room-history event
-socket.on("room-history", (roomHistory) => {
+socket.on("room-history", async (roomHistory) => {
   roomNameDisplay.textContent = roomHistory.roomName;
   roomIdDisplay.textContent = roomHistory.roomId;
   userCountDisplay.textContent = roomHistory.noOfUsers;
@@ -119,11 +139,26 @@ socket.on("room-history", (roomHistory) => {
     terminateRoomBtn.classList.remove("hidden");
   }
 
-  messagesContainer.innerHTML = "";
-  roomHistory.messages.forEach((msg) => {
-    renderMessages(msg);
-  });
+  if (Object.keys(roomHistory.publicKeys).length >= 2) {
+    const [peerUserId] = Object.keys(roomHistory.publicKeys).filter(
+      (uid) => uid !== userId,
+    );
 
+    const peerPublicKeyAsJWK = roomHistory.publicKeys[peerUserId];
+    const peerPublicKey = await importPublicKey(peerPublicKeyAsJWK);
+
+    sharedEncryptionKey = await deriveEncryptionKey(
+      ecdhKeyPairs.privateKey,
+      peerPublicKey,
+    );
+  }
+
+  messagesContainer.innerHTML = "";
+
+  console.log("History:", roomHistory);
+  for (const msg of roomHistory.messages) {
+    await renderMessages(msg);
+  }
   // Use a slight timeout to ensure images or layout adjustments don't interfere
   setTimeout(scrollToBottom, 50);
 
@@ -159,18 +194,31 @@ socket.on("room-history", (roomHistory) => {
 });
 
 // Send message event listener
-sendBtn.addEventListener("click", (e) => {
+sendBtn.addEventListener("click", async (e) => {
   e.preventDefault();
-
   if (msgInput.value) {
     const msg = msgInput.value;
-    socket.emit("newMessage", { userId, msg, roomId, userName });
-
+    if (!sharedEncryptionKey) {
+      console.log("Key not established");
+    } else {
+      const iv = window.crypto.getRandomValues(new Uint8Array(12));
+      const encryptedMessage = await encryptMessage(
+        msg,
+        iv,
+        sharedEncryptionKey,
+      );
+      const msgPayload = {
+        msgText: encodeArrayBufferToBase64(encryptedMessage),
+        iv: iv.toBase64(),
+      };
+      socket.emit("newMessage", { userId, msgPayload, roomId, userName });
+    }
     msgInput.value = "";
   }
 });
 
 socket.on("newMessage", (msgObj) => {
+  console.log("msgobj on new msg", msgObj);
   renderMessages(msgObj);
 });
 

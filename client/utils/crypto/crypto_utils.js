@@ -19,21 +19,21 @@ export function extractPublicKey(publicKey) {
   );
 }
 
-export function importPublicKey(exportedPublicKey) {
+export function importPublicKey(peerPublicKeyAsJWK) {
   return window.crypto.subtle.importKey(
     cryptoParams.keyExportFormat,
-    exportedPublicKey,
+    peerPublicKeyAsJWK,
     cryptoParams.keyPairAlgo,
     false,
     [],
   );
 }
 
-export function deriveEncryptionKey(privateKey, publicKey) {
+export function deriveEncryptionKey(privateKey, peerPublicKey) {
   return window.crypto.subtle.deriveKey(
     {
       name: cryptoParams.keyPairAlgo.name,
-      public: publicKey,
+      public: peerPublicKey,
     },
     privateKey,
     {
@@ -45,9 +45,9 @@ export function deriveEncryptionKey(privateKey, publicKey) {
   );
 }
 
-export function encryptMessage(plainText, iv, encryptionKey) {
+export async function encryptMessage(message, iv, encryptionKey) {
   const encoder = new TextEncoder();
-  const encodedPlainText = encoder.encode(plainText);
+  const encodedPlainText = encoder.encode(message);
   return window.crypto.subtle.encrypt(
     {
       name: "AES-GCM",
@@ -69,4 +69,12 @@ export async function decryptMessage(cipherText, iv, encryptionKey) {
   );
   const decoder = new TextDecoder();
   return decoder.decode(plaintext);
+}
+
+export function encodeArrayBufferToBase64(arrayBuffer) {
+  return new Uint8Array(arrayBuffer).toBase64();
+}
+
+export function decodeBase64ToUint8Array(base64text) {
+  return Uint8Array.fromBase64(base64text);
 }

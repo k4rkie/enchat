@@ -4,25 +4,48 @@ import { getCurrentTime } from "@/utils/utils";
 
 type newMessageObj = {
   userId: string;
-  msg: string;
+  msgPayload: {
+    msgText: string;
+    iv: string;
+  };
   roomId: string;
   userName: string;
 };
 
-type messageObj = {
-  userId: string;
-  msg: string;
-  roomId: string;
-  userName: string;
-  msgTimestamp: string;
-  type: "text" | "sysmsg";
+type PublicKeyJwk = {
+  kty: string;
+  crv: string;
+  x: string;
+  y: string;
 };
+
+type messageObj =
+  | {
+      userId: string;
+      msgPayload: {
+        msgText: string;
+        iv: string;
+      };
+      roomId: string;
+      userName: string;
+      msgTimestamp: string;
+      type: "text";
+    }
+  | {
+      userId: string;
+      sysMsg: string;
+      roomId: string;
+      userName: string;
+      msgTimestamp: string;
+      type: "sysmsg";
+    };
 
 type joinRoomObj = {
   roomId: string;
   userId: string;
   roomName: string;
   userName: string;
+  publicKey: PublicKeyJwk;
 };
 
 type Room = {
@@ -32,6 +55,7 @@ type Room = {
   expiresAt: number;
   users: Set<string>;
   adminId: string;
+  publicKeys: Map<string, PublicKeyJwk>;
 };
 
 const roomStore = new Map<string, Room>();
@@ -68,7 +92,7 @@ function handleRoomJoin(joinRoomObj: joinRoomObj, socket: Socket, io: Server) {
         {
           roomId: joinRoomObj.roomId,
           userId: joinRoomObj.userId,
-          msg: `${joinRoomObj.userName} created the room`,
+          sysMsg: `${joinRoomObj.userName} created the room`,
           userName: joinRoomObj.userName,
           msgTimestamp: getCurrentTime(),
           type: "sysmsg",
@@ -77,6 +101,7 @@ function handleRoomJoin(joinRoomObj: joinRoomObj, socket: Socket, io: Server) {
       expiresAt: Date.now() + 30 * 60 * 1000,
       users: new Set([joinRoomObj.userId]),
       adminId: joinRoomObj.userId,
+      publicKeys: new Map().set(joinRoomObj.userId, joinRoomObj.publicKey),
     });
 
     setTimeout(
@@ -95,12 +120,13 @@ function handleRoomJoin(joinRoomObj: joinRoomObj, socket: Socket, io: Server) {
       room.messages.push({
         roomId: joinRoomObj.roomId,
         userId: joinRoomObj.userId,
-        msg: `${joinRoomObj.userName} joined the room`,
+        sysMsg: `${joinRoomObj.userName} joined the room`,
         userName: joinRoomObj.userName,
         msgTimestamp: getCurrentTime(),
         type: "sysmsg",
       });
     }
+    room.publicKeys.set(joinRoomObj.userId, joinRoomObj.publicKey);
   }
 
   const room = roomStore.get(roomKey)!;
@@ -111,6 +137,7 @@ function handleRoomJoin(joinRoomObj: joinRoomObj, socket: Socket, io: Server) {
     expiresAt: room.expiresAt,
     noOfUsers: room.users.size,
     adminId: room.adminId,
+    publicKeys: Object.fromEntries(room.publicKeys),
   };
 
   io.to(roomKey).emit("room-history", roomHistory);
@@ -118,7 +145,7 @@ function handleRoomJoin(joinRoomObj: joinRoomObj, socket: Socket, io: Server) {
 
 //do stuff after a new message is sent
 function handleNewMessage(newMessage: newMessageObj, io: Server) {
-  const { userId, msg, roomId, userName } = newMessage;
+  const { userId, msgPayload, roomId, userName } = newMessage;
   const roomKey = `r-${roomId}`;
   const room = roomStore.get(roomKey);
 
@@ -127,7 +154,7 @@ function handleNewMessage(newMessage: newMessageObj, io: Server) {
   const msgTimestamp = getCurrentTime();
   const message: messageObj = {
     userId,
-    msg,
+    msgPayload,
     roomId,
     userName,
     msgTimestamp,
@@ -135,6 +162,7 @@ function handleNewMessage(newMessage: newMessageObj, io: Server) {
   };
 
   room.messages.push(message);
+  console.log(room.messages);
 
   io.to(roomKey).emit("newMessage", message);
 }
