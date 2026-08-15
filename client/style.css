@@ -511,7 +511,7 @@ footer {
   font-family: var(--font-family);
 }
 
-#send-btn:hover {
+#send-btn:not(:disabled):hover {
   background: var(--accent-color);
   color: var(--bg-color);
 }

@@ -1,10 +1,13 @@
 import {
-  generateKeyPairs,
   extractPublicKey,
   importPublicKey,
   deriveEncryptionKey,
   encryptMessage,
   encodeArrayBufferToBase64,
+  retrieveKeyPairs,
+  decryptMessage,
+  decodeBase64ToUint8Array,
+  clearKeyPairsFromIndexDB,
 } from "./utils/crypto/crypto_utils.js";
 
 const socket = io();
@@ -53,9 +56,27 @@ let connectionStatusInterval = null;
 //getting roomId form the url
 const roomId = document.URL.split("/")[4];
 
-const ecdhKeyPairs = await generateKeyPairs();
+// get the cryptoKeyPairs from indexdb
+const ecdhKeyPairs = await retrieveKeyPairs(roomId);
 const localPublicKey = await extractPublicKey(ecdhKeyPairs.publicKey);
 let sharedEncryptionKey = null;
+
+function updateChatUIState() {
+  if (!sharedEncryptionKey) {
+    msgInput.disabled = true;
+    sendBtn.disabled = true;
+    msgInput.placeholder = "Waiting for someone to join...";
+    msgInput.style.cursor = "not-allowed";
+    sendBtn.style.cursor = "not-allowed";
+  } else {
+    msgInput.disabled = false;
+    sendBtn.disabled = false;
+    msgInput.placeholder = "Type your message...";
+    msgInput.style.cursor = "text";
+    sendBtn.style.cursor = "pointer";
+  }
+}
+updateChatUIState();
 
 socket.emit("join-room", {
   roomId,
@@ -92,7 +113,15 @@ async function renderMessages(msgObj) {
 
   const message = document.createElement("p");
 
-  message.textContent = msgObj.msgPayload.msgText;
+  if (!sharedEncryptionKey) return;
+
+  const decryptedMessage = await decryptMessage(
+    decodeBase64ToUint8Array(msgObj.msgPayload.msgText),
+    decodeBase64ToUint8Array(msgObj.msgPayload.iv),
+    sharedEncryptionKey,
+  );
+
+  message.textContent = decryptedMessage;
   msgBubble.appendChild(message);
 
   const msgTimestamp = document.createElement("span");
@@ -153,9 +182,10 @@ socket.on("room-history", async (roomHistory) => {
     );
   }
 
+  updateChatUIState();
+
   messagesContainer.innerHTML = "";
 
-  console.log("History:", roomHistory);
   for (const msg of roomHistory.messages) {
     await renderMessages(msg);
   }
@@ -198,32 +228,24 @@ sendBtn.addEventListener("click", async (e) => {
   e.preventDefault();
   if (msgInput.value) {
     const msg = msgInput.value;
-    if (!sharedEncryptionKey) {
-      console.log("Key not established");
-    } else {
-      const iv = window.crypto.getRandomValues(new Uint8Array(12));
-      const encryptedMessage = await encryptMessage(
-        msg,
-        iv,
-        sharedEncryptionKey,
-      );
-      const msgPayload = {
-        msgText: encodeArrayBufferToBase64(encryptedMessage),
-        iv: iv.toBase64(),
-      };
-      socket.emit("newMessage", { userId, msgPayload, roomId, userName });
-    }
+    const iv = window.crypto.getRandomValues(new Uint8Array(12));
+    const encryptedMessage = await encryptMessage(msg, iv, sharedEncryptionKey);
+    const msgPayload = {
+      msgText: encodeArrayBufferToBase64(encryptedMessage),
+      iv: iv.toBase64(),
+    };
+    socket.emit("newMessage", { userId, msgPayload, roomId, userName });
     msgInput.value = "";
   }
 });
 
 socket.on("newMessage", (msgObj) => {
-  console.log("msgobj on new msg", msgObj);
   renderMessages(msgObj);
 });
 
 socket.on("room-expired", (msg) => {
   expiryModal.classList.remove("hidden");
+  clearKeyPairsFromIndexDB(roomId);
   homeBtn.addEventListener("click", () => {
     window.location.href = "/";
   });
@@ -232,7 +254,8 @@ socket.on("room-expired", (msg) => {
   }, 10000);
 });
 
-socket.on("terminate-room-successful", (msg) => {
+socket.on("terminate-room-successful", async (msg) => {
+  await clearKeyPairsFromIndexDB(roomId);
   if (!isUserAdmin) {
     window.location.href = `/?roomTerminated=true`;
     return;

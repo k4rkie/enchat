@@ -6,7 +6,7 @@ const cryptoParams = {
   keyExportFormat: "jwk",
 };
 
-export function generateKeyPairs() {
+function generateKeyPairs() {
   return window.crypto.subtle.generateKey(cryptoParams.keyPairAlgo, false, [
     "deriveKey",
   ]);
@@ -77,4 +77,66 @@ export function encodeArrayBufferToBase64(arrayBuffer) {
 
 export function decodeBase64ToUint8Array(base64text) {
   return Uint8Array.fromBase64(base64text);
+}
+
+export async function retrieveKeyPairs(roomId) {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open("EnchatDB", 1);
+
+    request.onupgradeneeded = (event) => {
+      const db = event.target.result;
+      if (!db.objectStoreNames.contains("cryptoKeyPairs")) {
+        db.createObjectStore("cryptoKeyPairs");
+      }
+    };
+
+    request.onsuccess = (event) => {
+      const db = event.target.result;
+
+      const readTx = db.transaction("cryptoKeyPairs", "readonly");
+      const getRequest = readTx.objectStore("cryptoKeyPairs").get(roomId);
+
+      getRequest.onsuccess = async () => {
+        if (getRequest.result) {
+          resolve(getRequest.result);
+        } else {
+          const newKeyPair = await generateKeyPairs();
+
+          const writeTx = db.transaction("cryptoKeyPairs", "readwrite");
+          const putRequest = writeTx
+            .objectStore("cryptoKeyPairs")
+            .put(newKeyPair, roomId);
+
+          putRequest.onsuccess = () => resolve(newKeyPair);
+          putRequest.onerror = () => reject(putRequest.error);
+        }
+      };
+      getRequest.onerror = () => reject(getRequest.error);
+    };
+    request.onerror = (event) => reject(event.target.error);
+  });
+}
+
+export async function clearKeyPairsFromIndexDB(roomId) {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open("EnchatDB", 1);
+
+    request.onsuccess = (event) => {
+      const db = event.target.result;
+
+      if (!db.objectStoreNames.contains("cryptoKeyPairs")) {
+        return resolve();
+      }
+
+      const writeTx = db.transaction("cryptoKeyPairs", "readwrite");
+      const deleteRequest = writeTx
+        .objectStore("cryptoKeyPairs")
+        .delete(roomId);
+
+      deleteRequest.onsuccess = () => resolve();
+      deleteRequest.onerror = () => reject(deleteRequest.error);
+    };
+
+    request.onerror = (event) => reject(event.target.error);
+  });
 }
