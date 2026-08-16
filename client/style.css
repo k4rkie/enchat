@@ -27,11 +27,14 @@ textarea {
 
 body {
   background-color: var(--bg-color);
-  position: relative;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
   color: var(--text-color);
   font-family: var(--font-family);
-  height: 100vh;
-  height: 100dvh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -270,6 +273,7 @@ header {
   flex-direction: column;
   gap: 0.75rem;
   border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
 }
 
 .header-top,
@@ -467,6 +471,7 @@ h1 {
 
 footer {
   padding: 1rem;
+  flex-shrink: 0;
 }
 
 .footer {
@@ -574,44 +579,40 @@ footer {
 /* --- Responsive: Tablets & Phones --- */
 
 @media (max-width: 768px) {
-  :root {
-    interactive-widget: resizes-content;
-  }
-
   #github-link {
     top: 1rem;
     right: 1rem;
   }
 
-  /* Welcome page: allow scroll + robust centering */
+  /* Welcome page: fit on one screen, no scrolling */
   .welcome-page {
-    overflow-y: auto;
-    padding: 1.5rem 0;
-    overscroll-behavior: contain;
+    justify-content: center;
+    padding: 1rem 0;
   }
 
   .welcome-page .container {
     margin: auto;
     width: 90%;
-    padding: 1.5rem 1.25rem;
+    padding: 1.25rem 1.25rem;
   }
 
   .hero h1 {
-    font-size: 2.5rem;
-    letter-spacing: 6px;
+    font-size: 2.25rem;
+    letter-spacing: 5px;
+    margin-bottom: 0.25rem;
   }
 
   .welcome-text {
-    margin-top: 1.25rem;
-    margin-bottom: 1.25rem;
+    margin-top: 0.75rem;
+    margin-bottom: 1rem;
   }
 
   .button-group {
-    gap: 1rem;
+    gap: 0.75rem;
   }
 
   .meta-info {
-    margin-top: 2rem;
+    margin-top: 1.5rem;
   }
 
   .modal-content {

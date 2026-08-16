@@ -262,3 +262,13 @@ socket.on("terminate-room-successful", async (msg) => {
   }
   window.location.href = "/";
 });
+
+const visualViewport = window.visualViewport;
+
+if (visualViewport) {
+  visualViewport.addEventListener("resize", () => {
+    requestAnimationFrame(() => {
+      scrollToBottom();
+    });
+  });
+}
