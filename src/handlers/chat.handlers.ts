@@ -162,7 +162,6 @@ function handleNewMessage(newMessage: newMessageObj, io: Server) {
   };
 
   room.messages.push(message);
-  console.log(room.messages);
 
   io.to(roomKey).emit("newMessage", message);
 }

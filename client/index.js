@@ -47,9 +47,6 @@ if (roomTerminationRedirect) {
   });
 }
 
-console.log("noUsernameRedirect:", noUsernameRedirect);
-console.log("roomTerminationRedirect:", roomTerminationRedirect);
-
 function generateUserId() {
   if (!sessionStorage.getItem("userId")) {
     sessionStorage.setItem("userId", `${crypto.randomUUID()}`);
@@ -78,7 +75,7 @@ createRoomBtn.addEventListener("click", () => {
     if (userName.length < 3 || userName.length > 20) {
       userNameError.textContent = "Username must contain 3-20 characters";
       userNameError.classList.toggle("hidden");
-      return console.log("Invalid username");
+      return;
     }
     createRoomModal.classList.remove("hidden");
     setUserName();
@@ -111,7 +108,7 @@ joinRoomBtn.addEventListener("click", () => {
     if (userName.length < 3 || userName.length > 20) {
       userNameError.textContent = "Username must contain 3-20 characters";
       userNameError.classList.toggle("hidden");
-      return console.log("Invalid username");
+      return;
     }
     joinRoomModal.classList.remove("hidden");
     setUserName();
@@ -128,7 +125,7 @@ confirmJoinBtn.addEventListener("click", async () => {
     if (roomId.length !== 8) {
       joinRoomError.textContent = "Invalid room id";
       joinRoomError.classList.toggle("hidden");
-      return console.log("Invalid id");
+      return;
     }
     try {
       const response = await fetch(`/check-room?roomId=${roomId}`, {
@@ -143,7 +140,6 @@ confirmJoinBtn.addEventListener("click", async () => {
         confirmJoinBtn.disabled = false;
         return;
       }
-      console.log("Room joined successfully");
       window.location.href = `/r/${roomId}`;
       joinInput.value = "";
     } catch (err) {

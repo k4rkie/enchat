@@ -9,8 +9,6 @@ export function initSocket(httpServer: any) {
   const io = new Server(httpServer);
 
   io.on("connection", (socket) => {
-    console.log("New User connected");
-
     // room join
     socket.on("join-room", (joinRoomObj) => {
       handleRoomJoin(joinRoomObj, socket, io);
