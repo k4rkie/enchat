@@ -21,24 +21,24 @@ type PublicKeyJwk = {
 
 type messageObj =
   | {
-      userId: string;
-      msgPayload: {
-        msgText: string;
-        iv: string;
-      };
-      roomId: string;
-      userName: string;
-      msgTimestamp: string;
-      type: "text";
-    }
-  | {
-      userId: string;
-      sysMsg: string;
-      roomId: string;
-      userName: string;
-      msgTimestamp: string;
-      type: "sysmsg";
+    userId: string;
+    msgPayload: {
+      msgText: string;
+      iv: string;
     };
+    roomId: string;
+    userName: string;
+    msgTimestamp: string;
+    type: "text";
+  }
+  | {
+    userId: string;
+    sysMsg: string;
+    roomId: string;
+    userName: string;
+    msgTimestamp: string;
+    type: "sysmsg";
+  };
 
 type joinRoomObj = {
   roomId: string;
@@ -71,6 +71,11 @@ function checkRoom(req: Request, res: Response) {
   if (!roomStore.has(roomKey)) {
     return res.status(404).json({
       error: "Room with provided id doesn't exist",
+    });
+  }
+  if (roomStore.get(roomKey)?.users.size == 2) {
+    return res.status(400).json({
+      error: "Room is already full",
     });
   }
   return res.status(200).json({
