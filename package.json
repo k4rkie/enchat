@@ -9,7 +9,8 @@
   },
   "scripts": {
     "dev": "bun --watch ./src/index.ts",
-    "start": "bun ./src/index.ts"
+    "build": "bun build --compile ./src/index.ts --outfile=./dist/server",
+    "start": "./dist/server"
   },
   "peerDependencies": {
     "typescript": "^5"

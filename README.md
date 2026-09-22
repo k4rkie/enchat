@@ -60,9 +60,22 @@ There are no accounts, profiles or message history. Just a room id, a username, 
 
 ## Getting started
 
+You can use any one of the following methods to run and test Enchat:
+
+**Option 1**:
+
 **Visit the site:** [Enchat](enchat.k4rkie.me)
 
- `OR`
+**Option 2**:
+
+**Using Docker**:
+```
+git clone git@github.com:k4rkie/enchat.git
+cd enchat
+docker compose up -d
+```
+
+**Option 3**:
 
 **Build it yourself:**
 
@@ -74,7 +87,7 @@ bun install
 bun dev
 ```
 
-Open `http://localhost:8080` (or set `PORT`), pick a username, create a room, and share the room ID — or open a second tab/browser to test end-to-end encryption locally.
+If using Option 2 or 3, open `http://localhost:8080`, pick a username, create a room, and share the room ID — or open a second tab/browser to test end-to-end encryption locally.
 
 ## Project structure
 
