@@ -103,6 +103,32 @@ cancelCreateModalBtn.addEventListener("click", () => {
   roomNameInput.value = "";
 });
 
+document.addEventListener("keydown", (event) => {
+  if (!createRoomModal.classList.contains("hidden")) {
+    if (event.key === "Enter") {
+      confirmCreateBtn.click();
+    }
+    if (event.key === "Escape") {
+      cancelCreateModalBtn.click();
+    }
+  }
+
+  if (!joinRoomModal.classList.contains("hidden")) {
+    if (event.key === "Enter") {
+      confirmJoinBtn.click();
+    }
+    if (event.key === "Escape") {
+      cancelJoinModalBtn.click();
+    }
+  }
+
+  if (!noUserNameModal.classList.contains("hidden")) {
+    if (event.key === "Enter" || "Escape") {
+      noUserNameConfirmBtn.click();
+    }
+  }
+});
+
 joinRoomBtn.addEventListener("click", () => {
   if (userName) {
     if (userName.length < 3 || userName.length > 20) {

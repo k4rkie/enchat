@@ -32,6 +32,7 @@ const roomIdDisplay = document.getElementById("room-id-display");
 const copyIdBtn = document.getElementById("copy-id-btn");
 const userCountDisplay = document.getElementById("user-count");
 
+// Room terminate components
 const terminateRoomBtn = document.getElementById("terminate-room-btn");
 const confirmRoomTerminationModal = document.getElementById(
   "confirm-room-termination-modal",
@@ -154,6 +155,17 @@ confirmTerminateButton.addEventListener("click", () => {
 
 cancelTerminateButton.addEventListener("click", () => {
   confirmRoomTerminationModal.classList.toggle("hidden");
+});
+
+document.addEventListener("keydown", (event) => {
+  if (!confirmRoomTerminationModal.classList.contains("hidden")) {
+    if (event.key === "Enter") {
+      confirmTerminateButton.click();
+    }
+    if (event.key === "Escape") {
+      cancelTerminateButton.click();
+    }
+  }
 });
 
 // responding to room-history event
