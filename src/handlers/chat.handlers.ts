@@ -55,6 +55,7 @@ type Room = {
   expiresAt: number;
   users: Set<string>;
   adminId: string;
+  adminSecret: string;
   publicKeys: Map<string, PublicKeyJwk>;
 };
 
@@ -90,6 +91,7 @@ function handleRoomJoin(joinRoomObj: joinRoomObj, socket: Socket, io: Server) {
   socket.join(roomKey);
 
   if (!roomStore.has(roomKey)) {
+    const adminSecret = crypto.randomUUID();
     roomStore.set(roomKey, {
       roomId: joinRoomObj.roomId,
       roomName: joinRoomObj.roomName,
@@ -106,8 +108,12 @@ function handleRoomJoin(joinRoomObj: joinRoomObj, socket: Socket, io: Server) {
       expiresAt: Date.now() + 30 * 60 * 1000,
       users: new Set([joinRoomObj.userId]),
       adminId: joinRoomObj.userId,
+      adminSecret,
       publicKeys: new Map().set(joinRoomObj.userId, joinRoomObj.publicKey),
     });
+
+    // private: only creator gets the secret, never broadcast
+    socket.emit("admin-secret", { adminSecret });
 
     setTimeout(
       () => {
@@ -171,14 +177,15 @@ function handleNewMessage(newMessage: newMessageObj, io: Server) {
   io.to(roomKey).emit("newMessage", message);
 }
 
-function handleTerminateRoom(terminateRoomObj: any, io: Server) {
+function handleTerminateRoom(terminateRoomObj: {roomId: string, adminSecret: string}, io: Server) {
   const roomKey = `r-${terminateRoomObj.roomId}`;
-  if (roomStore.has(roomKey)) {
-    roomStore.delete(roomKey);
-    console.log(
-      `Room with id: ${terminateRoomObj.roomId} has been removed form the room store`,
-    );
-  }
+  const room = roomStore.get(roomKey);
+  if (!room) return;
+  if (room.adminSecret !== terminateRoomObj.adminSecret) return;
+  roomStore.delete(roomKey);
+  console.log(
+    `Room with id: ${terminateRoomObj.roomId} has been removed form the room store`,
+  );
   io.to(roomKey).emit(
     "terminate-room-successful",
     "Room Terminated Successfully",

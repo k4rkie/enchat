@@ -88,6 +88,11 @@ socket.emit("join-room", {
 });
 sessionStorage.removeItem("roomName");
 
+// admin key: server sends privately on create / admin rejoin
+socket.on("admin-secret", ({ adminSecret }) => {
+  sessionStorage.setItem(`adminSecret-${roomId}`, adminSecret);
+});
+
 // rendering messages
 async function renderMessages(msgObj) {
   if (msgObj.type === "sysmsg") {
@@ -150,7 +155,8 @@ terminateRoomBtn.addEventListener("click", () => {
 });
 
 confirmTerminateButton.addEventListener("click", () => {
-  socket.emit("terminate-room", { roomId });
+  const adminSecret = sessionStorage.getItem(`adminSecret-${roomId}`);
+  socket.emit("terminate-room", { roomId, adminSecret });
 });
 
 cancelTerminateButton.addEventListener("click", () => {
@@ -268,6 +274,7 @@ socket.on("room-expired", (msg) => {
 
 socket.on("terminate-room-successful", async (msg) => {
   await clearKeyPairsFromIndexDB(roomId);
+  sessionStorage.removeItem(`adminSecret-${roomId}`);
   if (!isUserAdmin) {
     window.location.href = `/?roomTerminated=true`;
     return;
