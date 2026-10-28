@@ -21,24 +21,24 @@ type PublicKeyJwk = {
 
 type messageObj =
   | {
-    userId: string;
-    msgPayload: {
-      msgText: string;
-      iv: string;
-    };
-    roomId: string;
-    userName: string;
-    msgTimestamp: string;
-    type: "text";
-  }
+      userId: string;
+      msgPayload: {
+        msgText: string;
+        iv: string;
+      };
+      roomId: string;
+      userName: string;
+      msgTimestamp: string;
+      type: "text";
+    }
   | {
-    userId: string;
-    sysMsg: string;
-    roomId: string;
-    userName: string;
-    msgTimestamp: string;
-    type: "sysmsg";
-  };
+      userId: string;
+      sysMsg: string;
+      roomId: string;
+      userName: string;
+      msgTimestamp: string;
+      type: "sysmsg";
+    };
 
 type joinRoomObj = {
   roomId: string;
@@ -154,13 +154,50 @@ function handleRoomJoin(joinRoomObj: joinRoomObj, socket: Socket, io: Server) {
   io.to(roomKey).emit("room-history", roomHistory);
 }
 
-//do stuff after a new message is sent
-function handleNewMessage(newMessage: newMessageObj, io: Server) {
+//handle new message
+function handleNewMessage(
+  newMessage: newMessageObj,
+  socket: Socket,
+  io: Server,
+) {
   const { userId, msgPayload, roomId, userName } = newMessage;
-  const roomKey = `r-${roomId}`;
-  const room = roomStore.get(roomKey);
 
-  if (!room) return;
+  if (!roomId || !userId || !userName) {
+    return;
+  }
+
+  const roomKey = `r-${roomId}`;
+
+  if (!socket.rooms.has(roomKey)) {
+    return;
+  }
+
+  const room = roomStore.get(roomKey);
+  if (!room) {
+    return;
+  }
+
+  if (room.expiresAt <= Date.now()) {
+    roomStore.delete(roomKey);
+    io.to(roomKey).emit("room-expired", "The room has expired");
+    return;
+  }
+
+  if (!room.users.has(userId)) {
+    return;
+  }
+
+  if (
+    !msgPayload ||
+    typeof msgPayload !== "object" ||
+    typeof msgPayload.msgText !== "string" ||
+    typeof msgPayload.iv !== "string" ||
+    msgPayload.msgText.length === 0 ||
+    msgPayload.msgText.length > 2000 ||
+    msgPayload.iv.length === 0
+  ) {
+    return;
+  }
 
   const msgTimestamp = getCurrentTime();
   const message: messageObj = {
@@ -177,7 +214,10 @@ function handleNewMessage(newMessage: newMessageObj, io: Server) {
   io.to(roomKey).emit("newMessage", message);
 }
 
-function handleTerminateRoom(terminateRoomObj: {roomId: string, adminSecret: string}, io: Server) {
+function handleTerminateRoom(
+  terminateRoomObj: { roomId: string; adminSecret: string },
+  io: Server,
+) {
   const roomKey = `r-${terminateRoomObj.roomId}`;
   const room = roomStore.get(roomKey);
   if (!room) return;

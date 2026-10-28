@@ -16,7 +16,7 @@ export function initSocket(httpServer: any) {
 
     // new message
     socket.on("newMessage", (newMessage) => {
-      handleNewMessage(newMessage, io);
+      handleNewMessage(newMessage, socket, io);
     });
 
     //terminate room
