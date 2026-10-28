@@ -3,6 +3,7 @@ import {
   handleNewMessage,
   handleRoomJoin,
   handleTerminateRoom,
+  handleDisconnect,
 } from "@/handlers/chat.handlers";
 
 export function initSocket(httpServer: any) {
@@ -11,6 +12,7 @@ export function initSocket(httpServer: any) {
   io.on("connection", (socket) => {
     // room join
     socket.on("join-room", (joinRoomObj) => {
+      console.log("Socket connected", socket.id);
       handleRoomJoin(joinRoomObj, socket, io);
     });
 
@@ -22,6 +24,11 @@ export function initSocket(httpServer: any) {
     //terminate room
     socket.on("terminate-room", (terminateRoomObj) => {
       handleTerminateRoom(terminateRoomObj, io);
+    });
+
+    socket.on("disconnect", () => {
+      console.log("Socket disconnected", socket.id);
+      handleDisconnect(socket, io);
     });
   });
 

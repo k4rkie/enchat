@@ -59,6 +59,8 @@ type Room = {
   publicKeys: Map<string, PublicKeyJwk>;
 };
 
+const socketToUserIdMap = new Map<string, string>();
+const userIdToUserNameMap = new Map<string, string>();
 const roomStore = new Map<string, Room>();
 
 function checkRoom(req: Request, res: Response) {
@@ -86,6 +88,9 @@ function checkRoom(req: Request, res: Response) {
 
 //do stuff after a user joins/creates a new room
 function handleRoomJoin(joinRoomObj: joinRoomObj, socket: Socket, io: Server) {
+  socketToUserIdMap.set(socket.id, joinRoomObj.userId);
+  userIdToUserNameMap.set(joinRoomObj.userId, joinRoomObj.userName);
+
   const roomKey = `r-${joinRoomObj.roomId}`;
 
   socket.join(roomKey);
@@ -232,4 +237,48 @@ function handleTerminateRoom(
   );
 }
 
-export { checkRoom, handleNewMessage, handleRoomJoin, handleTerminateRoom };
+function handleDisconnect(socket: Socket, io: Server) {
+  const userId = socketToUserIdMap.get(socket.id);
+  if (!userId) return;
+
+  const disconnectedUserName = userIdToUserNameMap.get(userId) ?? userId;
+
+  socketToUserIdMap.delete(socket.id);
+
+  for (const roomKey of socket.rooms) {
+    if (roomKey === socket.id) continue;
+
+    const room = roomStore.get(roomKey);
+    if (!room) continue;
+
+    room.users.delete(userId);
+
+    if (room.users.size > 0) {
+      const leaveMessage: messageObj = {
+        roomId: room.roomId,
+        userId,
+        sysMsg: `${disconnectedUserName} left the room`,
+        userName: disconnectedUserName,
+        msgTimestamp: getCurrentTime(),
+        type: "sysmsg",
+      };
+
+      room.messages.push(leaveMessage);
+      io.to(roomKey).emit("newMessage", leaveMessage);
+    }
+
+    if (room.users.size === 0) {
+      roomStore.delete(roomKey);
+    }
+  }
+
+  userIdToUserNameMap.delete(userId);
+}
+
+export {
+  checkRoom,
+  handleNewMessage,
+  handleRoomJoin,
+  handleTerminateRoom,
+  handleDisconnect,
+};
