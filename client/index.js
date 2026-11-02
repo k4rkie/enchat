@@ -8,6 +8,7 @@ const createRoomModal = document.getElementById("create-room-modal");
 const confirmCreateBtn = document.getElementById("confirm-create");
 const cancelCreateModalBtn = document.getElementById("cancel-create-modal");
 const roomNameInput = document.getElementById("room-name");
+const createRoomError = document.getElementById("create-room-error");
 
 //Room join components
 const joinRoomBtn = document.getElementById("join-room-btn");
@@ -86,12 +87,41 @@ createRoomBtn.addEventListener("click", () => {
   }
 });
 
-confirmCreateBtn.addEventListener("click", () => {
+confirmCreateBtn.addEventListener("click", async () => {
   const roomName = roomNameInput.value.trim();
   if (roomName) {
     const roomId = crypto.randomUUID().split("-")[0];
     sessionStorage.setItem("roomName", roomName);
-    window.location.href = `/r/${roomId}`;
+
+    try {
+      createRoomURL = new URL("/create-room", window.location.origin);
+      createRoomURL.search = new URLSearchParams({
+        roomId: roomId,
+        userId: userId,
+      });
+
+      const response = await fetch(createRoomURL, {
+        method: "GET",
+      });
+
+      confirmCreateBtn.disabled = true;
+      if (!response.ok) {
+        const { error } = await response.json();
+        createRoomError.textContent = `${error}`;
+        createRoomError.classList.toggle("hidden");
+        confirmCreateBtn.disabled = false;
+        return;
+      }
+      createRoomError.textContent = "";
+      createRoomError.classList.toggle("hidden");
+      window.location.href = `/r/${roomId}`;
+      roomNameInput.value = "";
+    } catch (err) {
+      confirmCreateBtn.disabled = false;
+      console.log(err.message);
+    } finally {
+      confirmCreateBtn.disabled = false;
+    }
   } else {
     roomNameInput.style.borderColor = "#ff3e3e";
     setTimeout(() => (roomNameInput.style.borderColor = ""), 1000);
@@ -99,6 +129,8 @@ confirmCreateBtn.addEventListener("click", () => {
 });
 
 cancelCreateModalBtn.addEventListener("click", () => {
+  createRoomError.textContent = "";
+  createRoomError.classList.toggle("hidden");
   createRoomModal.classList.add("hidden");
   roomNameInput.value = "";
 });
@@ -154,10 +186,16 @@ confirmJoinBtn.addEventListener("click", async () => {
       return;
     }
     try {
-      const response = await fetch(`/check-room?roomId=${roomId}`, {
+      joinRoomURL = new URL("/join-room", window.location.origin);
+      joinRoomURL.search = new URLSearchParams({
+        roomId: roomId,
+        userId: userId,
+      });
+
+      const response = await fetch(joinRoomURL, {
         method: "GET",
       });
-      confirmJoinBtn;
+
       confirmJoinBtn.disabled = true;
       if (!response.ok) {
         const { error } = await response.json();

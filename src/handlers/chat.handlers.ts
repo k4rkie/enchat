@@ -63,6 +63,19 @@ const socketToUserIdMap = new Map<string, string>();
 const userIdToUserNameMap = new Map<string, string>();
 const roomStore = new Map<string, Room>();
 
+function createRoom(req: Request, res: Response) {
+  const roomId = req.query.roomId;
+  const roomKey = `r-${roomId}`;
+  if (!roomId) {
+    return res.status(400).json({
+      error: "Room Id is required",
+    });
+  }
+  return res.status(200).json({
+    message: "Room check successful",
+  });
+}
+
 function checkRoom(req: Request, res: Response) {
   const roomId = req.query.roomId;
   const roomKey = `r-${roomId}`;
@@ -276,6 +289,7 @@ function handleDisconnect(socket: Socket, io: Server) {
 }
 
 export {
+  createRoom,
   checkRoom,
   handleNewMessage,
   handleRoomJoin,
