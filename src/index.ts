@@ -4,6 +4,7 @@ import http from "node:http";
 import { initSocket } from "@/chat";
 import { checkRoom, createRoom } from "@/handlers/chat.handlers";
 import rateLimiter from "@/middlewares/ratelimiter";
+import checkRoomAccess from "@/middlewares/authenticator";
 
 const PORT = process.env.PORT || 8080;
 
@@ -20,8 +21,8 @@ app.get("/", (req, res) => {
   return res.sendFile(path.join(process.cwd(), "client/index.html"));
 });
 
-app.get("/create-room", rateLimiter("room_create"), createRoom);
-app.get("/join-room", rateLimiter("room_join"), checkRoom);
+app.get("/create-room", checkRoomAccess, rateLimiter("room_create"), createRoom);
+app.get("/join-room", checkRoomAccess, rateLimiter("room_join"), checkRoom);
 
 app.get("/r/:roomId", (req, res) => {
   return res.sendFile(path.join(process.cwd(), "client/chat.html"));

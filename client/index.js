@@ -49,12 +49,19 @@ if (roomTerminationRedirect) {
 }
 
 function generateUserId() {
-  if (!sessionStorage.getItem("userId")) {
-    sessionStorage.setItem("userId", `${crypto.randomUUID()}`);
+  let id = sessionStorage.getItem("userId");
+  if (!id) {
+    id = crypto.randomUUID();
+    sessionStorage.setItem("userId", id);
   }
-  return sessionStorage.getItem("userId");
+  return id;
 }
-const userId = generateUserId();
+let userId = generateUserId();
+
+function getUserId() {
+  userId = generateUserId();
+  return userId;
+}
 
 let userName = sessionStorage.getItem("userName") ?? "";
 userNameInput.value = userName;
@@ -90,21 +97,26 @@ createRoomBtn.addEventListener("click", () => {
 confirmCreateBtn.addEventListener("click", async () => {
   const roomName = roomNameInput.value.trim();
   if (roomName) {
-    const roomId = crypto.randomUUID().split("-")[0];
     sessionStorage.setItem("roomName", roomName);
 
     try {
-      createRoomURL = new URL("/create-room", window.location.origin);
+      const createRoomURL = new URL("/create-room", window.location.origin);
       createRoomURL.search = new URLSearchParams({
-        roomId: roomId,
-        userId: userId,
-      });
-
-      const response = await fetch(createRoomURL, {
-        method: "GET",
+        userId: getUserId(),
       });
 
       confirmCreateBtn.disabled = true;
+
+      let response = await fetch(createRoomURL, {
+        method: "GET",
+      });
+
+      if (response.status === 401) {
+        createRoomURL.searchParams.set("userId", getUserId());
+        response = await fetch(createRoomURL, {
+          method: "GET",
+        });
+      }
       if (!response.ok) {
         const { error } = await response.json();
         createRoomError.textContent = `${error}`;
@@ -112,13 +124,17 @@ confirmCreateBtn.addEventListener("click", async () => {
         confirmCreateBtn.disabled = false;
         return;
       }
+      const { roomId, token } = await response.json();
+      sessionStorage.setItem(`room_access_${roomId}`, token);
       createRoomError.textContent = "";
       createRoomError.classList.toggle("hidden");
       window.location.href = `/r/${roomId}`;
       roomNameInput.value = "";
     } catch (err) {
       confirmCreateBtn.disabled = false;
-      console.log(err.message);
+      createRoomError.textContent = "Unable to create room. Please try again.";
+      createRoomError.classList.remove("hidden");
+      console.error(err);
     } finally {
       confirmCreateBtn.disabled = false;
     }
@@ -186,17 +202,24 @@ confirmJoinBtn.addEventListener("click", async () => {
       return;
     }
     try {
-      joinRoomURL = new URL("/join-room", window.location.origin);
+      const joinRoomURL = new URL("/join-room", window.location.origin);
       joinRoomURL.search = new URLSearchParams({
         roomId: roomId,
-        userId: userId,
-      });
-
-      const response = await fetch(joinRoomURL, {
-        method: "GET",
+        userId: getUserId(),
       });
 
       confirmJoinBtn.disabled = true;
+
+      let response = await fetch(joinRoomURL, {
+        method: "GET",
+      });
+
+      if (response.status === 401) {
+        joinRoomURL.searchParams.set("userId", getUserId());
+        response = await fetch(joinRoomURL, {
+          method: "GET",
+        });
+      }
       if (!response.ok) {
         const { error } = await response.json();
         joinRoomError.textContent = `${error}`;
@@ -204,11 +227,15 @@ confirmJoinBtn.addEventListener("click", async () => {
         confirmJoinBtn.disabled = false;
         return;
       }
+      const { token } = await response.json();
+      sessionStorage.setItem(`room_access_${roomId}`, token);
       window.location.href = `/r/${roomId}`;
       joinInput.value = "";
     } catch (err) {
       confirmJoinBtn.disabled = false;
-      console.log(err.message);
+      joinRoomError.textContent = "Unable to join room. Please try again.";
+      joinRoomError.classList.remove("hidden");
+      console.error(err);
     } finally {
       confirmJoinBtn.disabled = false;
     }

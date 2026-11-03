@@ -1,15 +1,14 @@
 import type { Request, Response } from "express";
+import { randomInt } from "node:crypto";
 import type { Server, Socket } from "socket.io";
 import { getCurrentTime } from "@/utils/utils";
+import { signRoomAccessToken } from "@/auth/access.helper";
 
 type newMessageObj = {
-  userId: string;
   msgPayload: {
     msgText: string;
     iv: string;
   };
-  roomId: string;
-  userName: string;
 };
 
 type PublicKeyJwk = {
@@ -42,7 +41,6 @@ type messageObj =
 
 type joinRoomObj = {
   roomId: string;
-  userId: string;
   roomName: string;
   userName: string;
   publicKey: PublicKeyJwk;
@@ -53,7 +51,7 @@ type Room = {
   roomName: string;
   messages: messageObj[];
   expiresAt: number;
-  users: Set<string>;
+  users: Map<string, boolean>;
   adminId: string;
   adminSecret: string;
   publicKeys: Map<string, PublicKeyJwk>;
@@ -62,61 +60,122 @@ type Room = {
 const socketToUserIdMap = new Map<string, string>();
 const userIdToUserNameMap = new Map<string, string>();
 const roomStore = new Map<string, Room>();
+const disconnectTimers = new Map<string, ReturnType<typeof setTimeout>>();
 
-function createRoom(req: Request, res: Response) {
-  const roomId = req.query.roomId;
-  const roomKey = `r-${roomId}`;
-  if (!roomId) {
-    return res.status(400).json({
-      error: "Room Id is required",
-    });
+const ROOM_ID_LENGTH = 8;
+const DISCONNECT_GRACE_PERIOD_MS = 5000;
+const ROOM_ID_ALPHABET =
+  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+function generateRoomId() {
+  let roomId = "";
+
+  for (let i = 0; i < ROOM_ID_LENGTH; i++) {
+    roomId += ROOM_ID_ALPHABET.charAt(randomInt(ROOM_ID_ALPHABET.length));
   }
+
+  return roomId;
+}
+
+async function createRoom(req: Request, res: Response) {
+  const { userId } = req;
+  let roomId = generateRoomId();
+
+  while (roomStore.has(`r-${roomId}`)) {
+    roomId = generateRoomId();
+  }
+
+  const roomAccessToken = await signRoomAccessToken({
+    userId,
+    roomId,
+    action: "create",
+  });
   return res.status(200).json({
-    message: "Room check successful",
+    message: "Room creation successful",
+    roomId,
+    token: roomAccessToken,
   });
 }
 
-function checkRoom(req: Request, res: Response) {
-  const roomId = req.query.roomId;
-  const roomKey = `r-${roomId}`;
+async function checkRoom(req: Request, res: Response) {
+  const { userId, roomId } = req;
+
   if (!roomId) {
     return res.status(400).json({
-      error: "Room Id is required",
+      error: "RoomId is required",
     });
   }
-  if (!roomStore.has(roomKey)) {
+
+  const roomKey = `r-${roomId}`;
+  const room = roomStore.get(roomKey);
+
+  if (!room) {
     return res.status(404).json({
       error: "Room with provided id doesn't exist",
     });
   }
-  if (roomStore.get(roomKey)?.users.size == 2) {
+  if (room.users.size >= 2 && !room.users.has(userId)) {
     return res.status(400).json({
       error: "Room is already full",
     });
   }
+  const roomAccessToken = await signRoomAccessToken({
+    userId,
+    roomId,
+    action: "join",
+  });
   return res.status(200).json({
     message: "Room check successful",
+    token: roomAccessToken,
   });
 }
 
 //do stuff after a user joins/creates a new room
 function handleRoomJoin(joinRoomObj: joinRoomObj, socket: Socket, io: Server) {
-  socketToUserIdMap.set(socket.id, joinRoomObj.userId);
-  userIdToUserNameMap.set(joinRoomObj.userId, joinRoomObj.userName);
+  const { userId, roomId, action } = socket.data;
 
-  const roomKey = `r-${joinRoomObj.roomId}`;
+  if (!userId || !roomId || joinRoomObj.roomId !== roomId) {
+    return;
+  }
+
+  const roomKey = `r-${roomId}`;
+  const existingRoom = roomStore.get(roomKey);
+  const disconnectTimerKey = `${roomKey}:${userId}`;
+  const disconnectTimer = disconnectTimers.get(disconnectTimerKey);
+
+  if (disconnectTimer) {
+    clearTimeout(disconnectTimer);
+    disconnectTimers.delete(disconnectTimerKey);
+  }
+
+  if (action === "create") {
+    if (existingRoom && existingRoom.adminId !== userId) {
+      return;
+    }
+  } else {
+    if (!existingRoom) {
+      return;
+    }
+
+    if (existingRoom.users.size >= 2 && !existingRoom.users.has(userId)) {
+      return;
+    }
+  }
+
+  socketToUserIdMap.set(socket.id, userId);
+  userIdToUserNameMap.set(userId, joinRoomObj.userName);
 
   socket.join(roomKey);
 
-  if (!roomStore.has(roomKey)) {
+  if (!existingRoom) {
     const adminSecret = crypto.randomUUID();
     roomStore.set(roomKey, {
-      roomId: joinRoomObj.roomId,
+      roomId,
       roomName: joinRoomObj.roomName,
       messages: [
         {
-          roomId: joinRoomObj.roomId,
-          userId: joinRoomObj.userId,
+          roomId,
+          userId: userId,
           sysMsg: `${joinRoomObj.userName} created the room`,
           userName: joinRoomObj.userName,
           msgTimestamp: getCurrentTime(),
@@ -124,10 +183,10 @@ function handleRoomJoin(joinRoomObj: joinRoomObj, socket: Socket, io: Server) {
         },
       ],
       expiresAt: Date.now() + 30 * 60 * 1000,
-      users: new Set([joinRoomObj.userId]),
-      adminId: joinRoomObj.userId,
+      users: new Map([[userId, true]]),
+      adminId: userId,
       adminSecret,
-      publicKeys: new Map().set(joinRoomObj.userId, joinRoomObj.publicKey),
+      publicKeys: new Map().set(userId, joinRoomObj.publicKey),
     });
 
     // private: only creator gets the secret, never broadcast
@@ -144,27 +203,30 @@ function handleRoomJoin(joinRoomObj: joinRoomObj, socket: Socket, io: Server) {
     );
   } else {
     const room = roomStore.get(roomKey)!;
-    if (!room.users.has(joinRoomObj.userId)) {
-      room.users.add(joinRoomObj.userId);
+    if (!room.users.has(userId)) {
+      room.users.set(userId, true);
       room.messages.push({
-        roomId: joinRoomObj.roomId,
-        userId: joinRoomObj.userId,
+        roomId,
+        userId: userId,
         sysMsg: `${joinRoomObj.userName} joined the room`,
         userName: joinRoomObj.userName,
         msgTimestamp: getCurrentTime(),
         type: "sysmsg",
       });
+    } else {
+      room.users.set(userId, true);
     }
-    room.publicKeys.set(joinRoomObj.userId, joinRoomObj.publicKey);
+    room.publicKeys.set(userId, joinRoomObj.publicKey);
   }
 
   const room = roomStore.get(roomKey)!;
+  const activeUserCount = [...room.users.values()].filter(Boolean).length;
   const roomHistory = {
     roomId: room.roomId,
     roomName: room.roomName,
     messages: room.messages,
     expiresAt: room.expiresAt,
-    noOfUsers: room.users.size,
+    noOfUsers: activeUserCount,
     adminId: room.adminId,
     publicKeys: Object.fromEntries(room.publicKeys),
   };
@@ -178,9 +240,16 @@ function handleNewMessage(
   socket: Socket,
   io: Server,
 ) {
-  const { userId, msgPayload, roomId, userName } = newMessage;
+  const { msgPayload } = newMessage;
+  const { userId, roomId } = socket.data;
 
-  if (!roomId || !userId || !userName) {
+  if (!userId || !roomId) {
+    return;
+  }
+
+  const userName = userIdToUserNameMap.get(userId);
+
+  if (!userName) {
     return;
   }
 
@@ -201,7 +270,7 @@ function handleNewMessage(
     return;
   }
 
-  if (!room.users.has(userId)) {
+  if (room.users.get(userId) !== true) {
     return;
   }
 
@@ -250,7 +319,7 @@ function handleTerminateRoom(
   );
 }
 
-function handleDisconnect(socket: Socket, io: Server) {
+function handleDisconnecting(socket: Socket, io: Server) {
   const userId = socketToUserIdMap.get(socket.id);
   if (!userId) return;
 
@@ -261,31 +330,55 @@ function handleDisconnect(socket: Socket, io: Server) {
   for (const roomKey of socket.rooms) {
     if (roomKey === socket.id) continue;
 
-    const room = roomStore.get(roomKey);
-    if (!room) continue;
+    const disconnectTimerKey = `${roomKey}:${userId}`;
+    const disconnectTimer = setTimeout(() => {
+      disconnectTimers.delete(disconnectTimerKey);
 
-    room.users.delete(userId);
+      const room = roomStore.get(roomKey);
+      if (!room) return;
 
-    if (room.users.size > 0) {
-      const leaveMessage: messageObj = {
-        roomId: room.roomId,
-        userId,
-        sysMsg: `${disconnectedUserName} left the room`,
-        userName: disconnectedUserName,
-        msgTimestamp: getCurrentTime(),
-        type: "sysmsg",
-      };
+      if (userId === room.adminId) {
+        roomStore.delete(roomKey);
+        io.to(roomKey).emit(
+          "terminate-room-successful",
+          "Room Terminated Successfully",
+        );
+        userIdToUserNameMap.delete(userId);
+        return;
+      }
 
-      room.messages.push(leaveMessage);
-      io.to(roomKey).emit("newMessage", leaveMessage);
-    }
+      room.users.set(userId, false);
 
-    if (room.users.size === 0) {
-      roomStore.delete(roomKey);
-    }
+      if ([...room.users.values()].some(Boolean)) {
+        const leaveMessage: messageObj = {
+          roomId: room.roomId,
+          userId,
+          sysMsg: `${disconnectedUserName} left the room`,
+          userName: disconnectedUserName,
+          msgTimestamp: getCurrentTime(),
+          type: "sysmsg",
+        };
+
+        room.messages.push(leaveMessage);
+        io.to(roomKey).emit("newMessage", leaveMessage);
+
+        const activeUserCount = [...room.users.values()].filter(Boolean).length;
+        io.to(roomKey).emit("room-history", {
+          roomId: room.roomId,
+          roomName: room.roomName,
+          messages: room.messages,
+          expiresAt: room.expiresAt,
+          noOfUsers: activeUserCount,
+          adminId: room.adminId,
+          publicKeys: Object.fromEntries(room.publicKeys),
+        });
+      }
+
+      userIdToUserNameMap.delete(userId);
+    }, DISCONNECT_GRACE_PERIOD_MS);
+
+    disconnectTimers.set(disconnectTimerKey, disconnectTimer);
   }
-
-  userIdToUserNameMap.delete(userId);
 }
 
 export {
@@ -294,5 +387,5 @@ export {
   handleNewMessage,
   handleRoomJoin,
   handleTerminateRoom,
-  handleDisconnect,
+  handleDisconnecting,
 };

@@ -10,7 +10,11 @@ import {
   clearKeyPairsFromIndexDB,
 } from "./utils/crypto/crypto_utils.js";
 
-const socket = io();
+//getting roomId form the url
+const roomId = document.URL.split("/")[4];
+const roomAccessToken = sessionStorage.getItem(`room_access_${roomId}`);
+
+const socket = io({ auth: { roomId, token: roomAccessToken } });
 
 const msgInput = document.getElementById("msg-input");
 const sendBtn = document.getElementById("send-btn");
@@ -54,9 +58,6 @@ if (userName.length === 0) {
 let timeInterval = null;
 let connectionStatusInterval = null;
 
-//getting roomId form the url
-const roomId = document.URL.split("/")[4];
-
 // get the cryptoKeyPairs from indexdb
 const ecdhKeyPairs = await retrieveKeyPairs(roomId);
 const localPublicKey = await extractPublicKey(ecdhKeyPairs.publicKey);
@@ -81,7 +82,6 @@ updateChatUIState();
 
 socket.emit("join-room", {
   roomId,
-  userId,
   roomName,
   userName,
   publicKey: localPublicKey,
@@ -252,7 +252,7 @@ sendBtn.addEventListener("click", async (e) => {
       msgText: encodeArrayBufferToBase64(encryptedMessage),
       iv: iv.toBase64(),
     };
-    socket.emit("newMessage", { userId, msgPayload, roomId, userName });
+    socket.emit("newMessage", { msgPayload });
     msgInput.value = "";
   }
 });
